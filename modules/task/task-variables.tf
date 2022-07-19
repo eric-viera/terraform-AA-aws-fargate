@@ -33,3 +33,7 @@ variable "public_subnets" {
 variable "vpc_id" {
   
 }
+
+variable "container_definitions_json" {
+  type = string
+}

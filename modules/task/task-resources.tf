@@ -6,16 +6,7 @@ resource "aws_ecs_task_definition" "main" {
   memory                   = 512
   execution_role_arn       = var.ecs_task_execution_role_arn
   task_role_arn            = var.ecs_task_role_arn
-  container_definitions = jsonencode([{
-    name      = "${var.project_name}-container"
-    image     = var.container_image
-    essential = true
-    portMappings = [{
-      protocol      = "tcp"
-      containerPort = var.container_port
-      hostPort      = var.container_port
-    }]
-  }])
+  container_definitions    = var.container_definitions_json
 }
 
 resource "aws_ecs_service" "main" {
