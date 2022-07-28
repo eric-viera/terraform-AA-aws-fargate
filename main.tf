@@ -47,12 +47,18 @@ module "mario-service" {
   private_subnets             = module.vpc.private_subnets_id
   public_subnets              = module.vpc.public_subnets_id
   vpc_id                      = module.vpc.vpc_id
+  listener_port               = 80
+  listener_protocol           = "HTTP"
+  target_group_protocol       = "TCP"
+  launch_type                 = "FARGATE"
+  cpu                         = 256
+  memory                      = 512
   container_definitions_json = jsonencode([{
     name      = "${var.project}-container"
     image     = "pengbai/docker-supermario:latest"
     essential = true
     portMappings = [{
-      protocol      = "tcp"
+      protocol      = "TCP"
       containerPort = 8080
       hostPort      = 8080
     }]
