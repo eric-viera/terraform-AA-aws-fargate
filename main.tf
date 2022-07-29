@@ -49,7 +49,7 @@ module "mario-service" {
   vpc_id                      = module.vpc.vpc_id
   listener_port               = 80
   listener_protocol           = "HTTP"
-  target_group_protocol       = "TCP"
+  target_group_protocol       = "HTTP"
   launch_type                 = "FARGATE"
   cpu                         = 256
   memory                      = 512

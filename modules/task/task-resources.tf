@@ -70,7 +70,7 @@ resource "aws_security_group" "alb" {
   vpc_id = var.vpc_id
 
   ingress {
-    protocol         = var.listener_protocol
+    protocol         = "tcp"
     from_port        = var.listener_port
     to_port          = var.listener_port
     cidr_blocks      = ["0.0.0.0/0"]
@@ -91,7 +91,7 @@ resource "aws_security_group" "ecs_tasks" {
   vpc_id = var.vpc_id
 
   ingress {
-    protocol         = var.target_group_protocol
+    protocol         = "tcp"
     from_port        = var.container_port
     to_port          = var.container_port
     cidr_blocks      = ["0.0.0.0/0"]
