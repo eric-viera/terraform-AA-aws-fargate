@@ -9,9 +9,9 @@ The autoscaling target will allow the ecs service to provision new containers to
 |service_name|              |string|Self-explanatory|
 
 ## Resources Created
-aws_appautoscaling_target.ecs_target
-aws_appautoscaling_policy.ecs_policy_memory
-aws_appautoscaling_policy.ecs_policy_cpu
+- aws_appautoscaling_target.ecs_target
+- aws_appautoscaling_policy.ecs_policy_memory
+- aws_appautoscaling_policy.ecs_policy_cpu
 
 ## Output
 None.
