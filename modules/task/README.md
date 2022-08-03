@@ -21,6 +21,7 @@ A service is an artifact that makes sure that there are always at least two cont
 | memory                      | number      | Amount (in MiB) of memory used by the task                                                               |
 | listener_port               | number      | Port on which the load balancer is listening                                                             |
 | listener_protocol           | string      | Protocol for connections from clients to the load balancer, valid values are HTTP and HTTPS              |
+| strategy                    | string      | Scheduling strategy to use for the service. Valid values are REPLICA and DAEMON. Defaults to REPLICA     |
 | target_group_protocol       | string      | Protocol for routing traffic to targets. Should be one of GENEVE, HTTP, HTTPS, TCP, TCP_UDP, TLS, or UDP |
 
 ## Resources Created

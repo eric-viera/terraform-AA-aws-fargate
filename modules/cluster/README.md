@@ -12,9 +12,12 @@ This module enables you to assign custom or managed policies to the task role, a
 | project_name                       |              | string       | Self-explanatory                                  |
 | additional_role_policies           |              | list(string) | List of json strings containing policy statements |
 | additional_execution_role_policies |              | list(string) | List of json strings containing policy statements |
+| private_subnets                    |              | list(string) | List of private subnet IDs                        |
 
 ## Resources Created
 - aws_ecs_cluster.main
+- aws_ecs_capacity_provider.ecs_ec2_capacity
+- aws_ecs_cluster_capacity_providers.providers
 
 - aws_iam_role.ecs_task_role
 - aws_iam_policy.additional-task-policies
@@ -24,6 +27,13 @@ This module enables you to assign custom or managed policies to the task role, a
 - aws_iam_policy.additional-execution-policies
 - aws_iam_role_policy_attachment.execution_policy_attachments
 - aws_iam_role_policy_attachment.ecs-task-execution-role-policy-attachment
+
+- aws_iam_role.ecs_agent
+- aws_iam_role_policy_attachment.ecs_agent
+- aws_iam_instance_profile.ecs_agent
+
+- aws_launch_configuration.launch_conf
+- aws_autoscaling_group.cluster_asg
 
 
 ## Output
