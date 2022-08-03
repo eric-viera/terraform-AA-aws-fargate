@@ -17,7 +17,7 @@ resource "aws_ecs_service" "main" {
   deployment_minimum_healthy_percent = 50
   deployment_maximum_percent         = 200
   launch_type                        = var.launch_type
-  scheduling_strategy                = "REPLICA"
+  scheduling_strategy                = var.launch_type == "FARGATE" ? "REPLICA" : var.strategy
 
   network_configuration {
     security_groups  = [aws_security_group.ecs_tasks.id]
