@@ -1,6 +1,6 @@
 variable "project" {
   type    = string
-  default = "fargate-challenge"
+  default = "ecs-challenge"
 }
 
 variable "aws_region" {

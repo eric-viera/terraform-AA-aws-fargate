@@ -70,3 +70,9 @@ variable "target_group_protocol" {
   description = "Protocol to use for routing traffic to the targets. Should be one of GENEVE, HTTP, HTTPS, TCP, TCP_UDP, TLS, or UDP"
   type = string
 }
+
+variable "strategy" {
+  type = string
+  description = "Scheduling strategy to use for the service. Valid values are REPLICA and DAEMON."
+  default = "REPLICA"
+}
