@@ -63,7 +63,7 @@ EOF
 resource "aws_autoscaling_group" "cluster_asg" {
   health_check_type = "EC2"
   launch_configuration = aws_launch_configuration.launch_conf.name
-  max_size = 4
+  max_size = 10
   min_size = 1
   desired_capacity = 2
   name_prefix = var.project_name
