@@ -49,7 +49,7 @@ resource "aws_ecs_cluster" "main" {
 resource "aws_launch_configuration" "launch_conf" {
   iam_instance_profile = aws_iam_instance_profile.ecs_agent.name
   image_id = data.aws_ami.ec2_ami.id
-  instance_type = "t3.micro"
+  instance_type = "t3a.medium"
   name_prefix = var.project_name
   user_data = <<EOF
 #!/bin/bash
