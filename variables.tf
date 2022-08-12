@@ -1,6 +1,6 @@
 variable "project" {
   type    = string
-  default = "ecs-challenge"
+  default = "cluster-challenge"
 }
 
 variable "aws_region" {
