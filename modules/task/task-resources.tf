@@ -38,7 +38,7 @@ resource "aws_ecs_service" "main" {
 
 }
 
-resource "aws_alb_target_group" "main" {
+resource "aws_lb_target_group" "main" {
   name        = "${var.service_name}-tg"
   port        = var.container_port
   protocol    = var.target_group_protocol
