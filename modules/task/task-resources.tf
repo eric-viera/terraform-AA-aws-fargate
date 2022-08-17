@@ -27,7 +27,7 @@ resource "aws_ecs_service" "main" {
   # }
 
   load_balancer {
-    target_group_arn = aws_alb_target_group.main.arn
+    target_group_arn = aws_lb_target_group.main.arn
     container_name   = "${var.service_name}-container"
     container_port   = var.container_port
   }
@@ -51,7 +51,7 @@ resource "aws_lb_listener_rule" "static" {
 
   action {
     type             = "forward"
-    target_group_arn = aws_alb_target_group.main.arn
+    target_group_arn = aws_lb_target_group.main.arn
   }
 
   condition {

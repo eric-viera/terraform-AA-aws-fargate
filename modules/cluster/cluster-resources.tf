@@ -116,7 +116,7 @@ resource "aws_lb" "main" {
   subnets            = var.public_subnets
 }
 
-resource "aws_alb_listener" "http" {
+resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.main.id
   port              = var.listener_port
   protocol          = var.listener_protocol

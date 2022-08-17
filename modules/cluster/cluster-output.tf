@@ -15,7 +15,7 @@ output "cluster_name" {
 }
 
 output "listener_arn" {
-  value = aws_alb_listener.http.arn
+  value = aws_lb_listener.http.arn
 }
 
 output "domain_name" {
