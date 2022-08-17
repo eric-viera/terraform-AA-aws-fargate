@@ -16,3 +16,29 @@ variable "private_subnets" {
   type = list(string)
   description = "list of private subnet IDs"
 }
+
+variable "public_subnets" {
+  type = list(string)
+  description = "list of public subnet IDs"
+}
+
+variable "domain" {
+  type = string
+  description = "name of the hosted zone"
+  default = "acklenavenueclient.com"
+}
+
+variable "listener_port" {
+  description = "Port on which the load balancer is listening"
+  type = number
+}
+
+variable "listener_protocol" {
+  description = "Protocol for connections from clients to the load balancer, valid values are HTTP and HTTPS"
+  type = string
+}
+
+variable "vpc_id" {
+  type = string
+  description = "id of the vpc"
+}

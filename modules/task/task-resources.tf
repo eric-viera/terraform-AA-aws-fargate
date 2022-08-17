@@ -1,6 +1,6 @@
 resource "aws_ecs_task_definition" "main" {
-  family                   = var.project_name
-  network_mode             = "awsvpc"
+  family                   = var.service_name
+  network_mode             = "bridge"
   requires_compatibilities = [var.launch_type]
   cpu                      = var.cpu
   memory                   = var.memory
@@ -10,7 +10,7 @@ resource "aws_ecs_task_definition" "main" {
 }
 
 resource "aws_ecs_service" "main" {
-  name                               = "${var.project_name}-service"
+  name                               = "${var.service_name}-service"
   cluster                            = var.cluster
   task_definition                    = aws_ecs_task_definition.main.arn
   desired_count                      = 2
@@ -19,15 +19,16 @@ resource "aws_ecs_service" "main" {
   launch_type                        = var.launch_type
   scheduling_strategy                = var.launch_type == "FARGATE" ? "REPLICA" : var.strategy
 
-  network_configuration {
-    security_groups  = [aws_security_group.ecs_tasks.id]
-    subnets          = var.private_subnets
-    assign_public_ip = false
-  }
+  # this block is not compatible with tasks using bridge network_mode so it's commented
+  # network_configuration {
+  #   security_groups  = [aws_security_group.ecs_tasks.id]
+  #   subnets          = var.private_subnets
+  #   assign_public_ip = false
+  # }
 
   load_balancer {
     target_group_arn = aws_alb_target_group.main.arn
-    container_name   = "${var.project_name}-container"
+    container_name   = "${var.service_name}-container"
     container_port   = var.container_port
   }
 
@@ -35,59 +36,33 @@ resource "aws_ecs_service" "main" {
     ignore_changes = [task_definition, desired_count]
   }
 
-  depends_on = [aws_alb_listener.http]
-}
-
-resource "aws_lb" "main" {
-  name               = "${var.project_name}-alb"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.alb.id]
-  subnets            = var.public_subnets
 }
 
 resource "aws_alb_target_group" "main" {
-  name        = "${var.project_name}-tg"
+  name        = "${var.service_name}-tg"
   port        = var.container_port
   protocol    = var.target_group_protocol
   vpc_id      = var.vpc_id
-  target_type = "ip"
+  # target_type = "ip"
 }
 
-resource "aws_alb_listener" "http" {
-  load_balancer_arn = aws_lb.main.id
-  port              = var.listener_port
-  protocol          = var.listener_protocol
+resource "aws_lb_listener_rule" "static" {
+  listener_arn = var.listener_arn
 
-  default_action {
+  action {
     type             = "forward"
-    target_group_arn = aws_alb_target_group.main.id
-  }
-}
-
-resource "aws_security_group" "alb" {
-  name   = "${var.project_name}-sg-alb"
-  vpc_id = var.vpc_id
-
-  ingress {
-    protocol         = "tcp"
-    from_port        = var.listener_port
-    to_port          = var.listener_port
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
+    target_group_arn = aws_alb_target_group.main.arn
   }
 
-  egress {
-    protocol         = "-1"
-    from_port        = 0
-    to_port          = 0
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
+  condition {
+    host_header {
+      values = ["${var.project_name}-${var.service_name}.${var.domain}"]
+    }
   }
 }
 
 resource "aws_security_group" "ecs_tasks" {
-  name   = "${var.project_name}-sg-task"
+  name   = "${var.service_name}-task-sg"
   vpc_id = var.vpc_id
 
   ingress {
@@ -105,4 +80,12 @@ resource "aws_security_group" "ecs_tasks" {
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
+}
+
+resource "aws_route53_record" "record" {
+  zone_id = var.zone_id
+  name    = "${var.project_name}-${var.service_name}.${var.domain}"
+  type    = "CNAME"
+  ttl     = 5
+  records = [var.lb_dns_name]
 }

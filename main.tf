@@ -21,6 +21,10 @@ module "ecs-cluster" {
   additional_execution_role_policies = [data.aws_iam_policy_document.ecs-secret-policy_doc.json]
   additional_role_policies           = []
   private_subnets                    = module.vpc.private_subnets_id
+  public_subnets                     = module.vpc.public_subnets_id
+  listener_port                      = 80
+  listener_protocol                  = "HTTP" #this is upper-case
+  vpc_id                             = module.vpc.vpc_id
 }
 
 data "aws_iam_policy_document" "ecs-secret-policy_doc" {
@@ -37,63 +41,34 @@ data "aws_iam_policy_document" "ecs-secret-policy_doc" {
   }
 }
 
-module "mario-fargate-service" {
+module "mario-service" {
   source                      = "./modules/task"
   ecs_task_execution_role_arn = module.ecs-cluster.task_execution_role_arn
   ecs_task_role_arn           = module.ecs-cluster.task_role_arn
-  project_name                = "${var.project}-fargate"
+  project_name                = var.project
+  service_name                = "supermario"
+  domain                      = module.ecs-cluster.domain_name
   container_image             = "pengbai/docker-supermario:latest"
   container_port              = 8080
   cluster                     = module.ecs-cluster.cluster_id
   private_subnets             = module.vpc.private_subnets_id
   public_subnets              = module.vpc.public_subnets_id
   vpc_id                      = module.vpc.vpc_id
-  listener_port               = 80
-  listener_protocol           = "HTTP"
-  target_group_protocol       = "HTTP"
-  launch_type                 = "FARGATE"
-  cpu                         = 256
-  memory                      = 512
-  container_definitions_json = jsonencode([{
-    name      = "${var.project}-fargate-container"
-    image     = "pengbai/docker-supermario:latest"
-    essential = true
-    portMappings = [{
-      protocol      = "tcp"
-      containerPort = 8080
-      hostPort      = 8080
-    }]
-    repositoryCredentials = {
-      credentialsParameter = data.aws_secretsmanager_secret.dockerhub-creds.arn
-    }
-  }])
-}
-
-module "mario-ec2-service" {
-  source                      = "./modules/task"
-  ecs_task_execution_role_arn = module.ecs-cluster.task_execution_role_arn
-  ecs_task_role_arn           = module.ecs-cluster.task_role_arn
-  project_name                = "${var.project}-ec2"
-  container_image             = "pengbai/docker-supermario:latest"
-  container_port              = 8080
-  cluster                     = module.ecs-cluster.cluster_id
-  private_subnets             = module.vpc.private_subnets_id
-  public_subnets              = module.vpc.public_subnets_id
-  vpc_id                      = module.vpc.vpc_id
-  listener_port               = 80
-  listener_protocol           = "HTTP" #this is upper-case
+  listener_arn                = module.ecs-cluster.listener_arn
+  lb_dns_name                 = module.ecs-cluster.lb_dns_name
   target_group_protocol       = "HTTP" #this is upper-case
   launch_type                 = "EC2"
   cpu                         = 256
   memory                      = 512
+  zone_id                     = module.ecs-cluster.zone_id
   container_definitions_json = jsonencode([{
-    name      = "${var.project}-ec2-container"
+    name      = "supermario-container"
     image     = "pengbai/docker-supermario:latest"
     essential = true
     portMappings = [{
       protocol      = "tcp" #this is lower-case
       containerPort = 8080
-      hostPort      = 8080
+      hostPort      = 0
     }]
     repositoryCredentials = {
       credentialsParameter = data.aws_secretsmanager_secret.dockerhub-creds.arn
@@ -101,18 +76,38 @@ module "mario-ec2-service" {
   }])
 }
 
+module "nginx-service" {
+  source                      = "./modules/task"
+  ecs_task_execution_role_arn = module.ecs-cluster.task_execution_role_arn
+  ecs_task_role_arn           = module.ecs-cluster.task_role_arn
+  project_name                = "${var.project}-ec2"
+  service_name                = "nginx"
+  domain                      = module.ecs-cluster.domain_name
+  container_image             = "487799950875.dkr.ecr.us-east-1.amazonaws.com/fargate-test-app:latest"
+  container_port              = 8080
+  cluster                     = module.ecs-cluster.cluster_id
+  private_subnets             = module.vpc.private_subnets_id
+  public_subnets              = module.vpc.public_subnets_id
+  vpc_id                      = module.vpc.vpc_id
+  listener_arn                = module.ecs-cluster.listener_arn
+  lb_dns_name                 = module.ecs-cluster.lb_dns_name
+  target_group_protocol       = "HTTP" #this is upper-case
+  launch_type                 = "EC2"
+  cpu                         = 256
+  memory                      = 512
+  zone_id                     = module.ecs-cluster.zone_id
+  container_definitions_json = jsonencode([{
+    name      = "nginx-container"
+    image     = "487799950875.dkr.ecr.us-east-1.amazonaws.com/fargate-test-app:latest"
+    essential = true
+    portMappings = [{
+      protocol      = "tcp" #this is lower-case
+      containerPort = 8080
+      hostPort      = 0
+    }]
+  }])
+}
+
 data "aws_secretsmanager_secret" "dockerhub-creds" {
   name = "dockerhub-creds"
-}
-
-module "fargate-autoscaling" {
-  source       = "./modules/autoscaling"
-  cluster_name = module.ecs-cluster.cluster_name
-  service_name = module.mario-fargate-service.service_name
-}
-
-module "ec2-autoscaling" {
-  source       = "./modules/autoscaling"
-  cluster_name = module.ecs-cluster.cluster_name
-  service_name = module.mario-ec2-service.service_name
 }
