@@ -1,6 +1,6 @@
 resource "aws_ecs_task_definition" "main" {
   family                   = var.service_name
-  network_mode             = "bridge"
+  network_mode             = var.launch_type == "FARGATE" ? "awsvpc" : "bridge"
   requires_compatibilities = [var.launch_type]
   cpu                      = var.cpu
   memory                   = var.memory
@@ -25,6 +25,14 @@ resource "aws_ecs_service" "main" {
   #   subnets          = var.private_subnets
   #   assign_public_ip = false
   # }
+  dynamic "network_configuration" {
+    for_each = var.launch_type == "FARGATE" ? [ 1 ] : [ ]
+    content {
+      security_groups  = [aws_security_group.ecs_tasks.id]
+      subnets          = var.private_subnets
+      assign_public_ip = false
+    }
+  }
 
   load_balancer {
     target_group_arn = aws_lb_target_group.main.arn
@@ -43,7 +51,7 @@ resource "aws_lb_target_group" "main" {
   port        = var.container_port
   protocol    = var.target_group_protocol
   vpc_id      = var.vpc_id
-  # target_type = "ip"
+  target_type = var.launch_type == "FARGATE" ? "ip" : "instance"
 }
 
 resource "aws_lb_listener_rule" "static" {

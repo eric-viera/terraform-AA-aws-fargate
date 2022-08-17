@@ -9,7 +9,7 @@ data "aws_iam_policy_document" "assume_role_policy" {
   }
 }
 
-data "aws_iam_policy_document" "ecs_agent" {
+data "aws_iam_policy_document" "ecs_agent_assume_policy" {
   statement {
     actions = ["sts:AssumeRole"]
 

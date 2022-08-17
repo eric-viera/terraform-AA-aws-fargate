@@ -41,12 +41,17 @@ resource "aws_iam_role_policy_attachment" "execution_policy_attachments" {
 
 resource "aws_iam_role" "ecs_agent" {
   name               = "${var.project_name}-ecs-agent"
-  assume_role_policy = data.aws_iam_policy_document.ecs_agent.json
+  assume_role_policy = data.aws_iam_policy_document.ecs_agent_assume_policy.json
 }
 
 resource "aws_iam_role_policy_attachment" "ecs_agent" {
   role       = aws_iam_role.ecs_agent.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+}
+
+resource "aws_iam_role_policy_attachment" "ssm_policy_attach" {
+  role       = aws_iam_role.ecs_agent.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" # aws_iam_policy.ssm_policy.arn
 }
 
 resource "aws_iam_instance_profile" "ecs_agent" {
@@ -88,6 +93,16 @@ resource "aws_autoscaling_group" "cluster_asg" {
     key                 = "AmazonECSManaged"
     value               = true
     propagate_at_launch = true
+  }
+
+  tag {
+    key                 = "Name"
+    value               = var.project_name
+    propagate_at_launch = true
+  }
+
+  lifecycle {
+    ignore_changes = [desired_capacity]
   }
 }
 
@@ -147,7 +162,7 @@ resource "aws_security_group" "alb" {
   egress {
     protocol         = "-1"
     from_port        = 0
-    to_port          = 65535
+    to_port          = 0
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
