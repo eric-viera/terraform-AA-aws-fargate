@@ -70,6 +70,14 @@ module "mario-service" {
       containerPort = 8080
       hostPort      = 0
     }]
+    logConfiguration = {
+      logDriver = "awslogs",
+      options = {
+        awslogs-group = var.cloudwatch_group,
+        awslogs-region = var.aws_region,
+        awslogs-stream-prefix = "ecs"
+      }
+    }
     repositoryCredentials = {
       credentialsParameter = data.aws_secretsmanager_secret.dockerhub-creds.arn
     }
@@ -105,6 +113,14 @@ module "nginx-service" {
       containerPort = 8080
       hostPort      = 0
     }]
+    logConfiguration = {
+      logDriver = "awslogs",
+      options = {
+        awslogs-group = var.cloudwatch_group,
+        awslogs-region = var.aws_region,
+        awslogs-stream-prefix = "ecs"
+      }
+    }
   }])
 }
 

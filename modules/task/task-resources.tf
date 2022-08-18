@@ -19,12 +19,6 @@ resource "aws_ecs_service" "main" {
   launch_type                        = var.launch_type
   scheduling_strategy                = var.launch_type == "FARGATE" ? "REPLICA" : var.strategy
 
-  # this block is not compatible with tasks using bridge network_mode so it's commented
-  # network_configuration {
-  #   security_groups  = [aws_security_group.ecs_tasks.id]
-  #   subnets          = var.private_subnets
-  #   assign_public_ip = false
-  # }
   dynamic "network_configuration" {
     for_each = var.launch_type == "FARGATE" ? [ 1 ] : [ ]
     content {
@@ -78,7 +72,6 @@ resource "aws_security_group" "ecs_tasks" {
     from_port        = var.container_port
     to_port          = var.container_port
     cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
   }
 
   egress {
@@ -86,7 +79,6 @@ resource "aws_security_group" "ecs_tasks" {
     from_port        = 0
     to_port          = 0
     cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
   }
 }
 
