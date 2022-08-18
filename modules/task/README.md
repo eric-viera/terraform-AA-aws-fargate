@@ -28,8 +28,8 @@ A service is an artifact that makes sure that there are always at least two cont
 - aws_ecs_task_definition.main
 - aws_ecs_service.main
 - aws_lb.main
-- aws_alb_target_group.main
-- aws_alb_listener.http
+- aws_lb_target_group.main
+- aws_lb_listener.http
 - aws_security_group.alb
 - aws_security_group.ecs_tasks
 

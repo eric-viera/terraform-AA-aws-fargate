@@ -9,7 +9,7 @@ data "aws_iam_policy_document" "assume_role_policy" {
   }
 }
 
-data "aws_iam_policy_document" "ecs_agent" {
+data "aws_iam_policy_document" "ecs_agent_assume_policy" {
   statement {
     actions = ["sts:AssumeRole"]
 
@@ -38,4 +38,8 @@ data "aws_ami" "ec2_ami" {
     name   = "virtualization-type"
     values = ["hvm"]
   }
+}
+
+data "aws_route53_zone" "domain" {
+  name = var.domain
 }

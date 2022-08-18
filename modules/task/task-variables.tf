@@ -1,13 +1,28 @@
 variable "ecs_task_execution_role_arn" {
-  
+  type = string
 }
 
 variable "ecs_task_role_arn" {
-  
+  type = string
 }
 
 variable "project_name" {
   description = "what will you call this project?"
+}
+
+variable "service_name" {
+  type = string
+  description = "the name for this particular service"
+}
+
+variable "domain" {
+  type = string
+  description = "the name of the hosted zone"
+}
+
+variable "zone_id" {
+  type = string
+  description = "the id of the hosted zone"
 }
 
 variable "container_image" {
@@ -56,13 +71,7 @@ variable "memory" {
   type = number
 }
 
-variable "listener_port" {
-  description = "Port on which the load balancer is listening"
-  type = number
-}
-
-variable "listener_protocol" {
-  description = "Protocol for connections from clients to the load balancer, valid values are HTTP and HTTPS"
+variable "listener_arn" {
   type = string
 }
 
@@ -75,4 +84,9 @@ variable "strategy" {
   type = string
   description = "Scheduling strategy to use for the service. Valid values are REPLICA and DAEMON."
   default = "REPLICA"
+}
+
+variable "lb_dns_name" {
+  type = string
+  description = "dns name for the load balancer"
 }

@@ -39,6 +39,26 @@ resource "aws_iam_role_policy_attachment" "execution_policy_attachments" {
   policy_arn = element(aws_iam_policy.additional-execution-policies[*].arn, count.index)
 }
 
+resource "aws_iam_role" "ecs_agent" {
+  name               = "${var.project_name}-ecs-agent"
+  assume_role_policy = data.aws_iam_policy_document.ecs_agent_assume_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_agent" {
+  role       = aws_iam_role.ecs_agent.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+}
+
+resource "aws_iam_role_policy_attachment" "ssm_policy_attach" {
+  role       = aws_iam_role.ecs_agent.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore" # aws_iam_policy.ssm_policy.arn
+}
+
+resource "aws_iam_instance_profile" "ecs_agent" {
+  name = "${var.project_name}-ecs-agent"
+  role = aws_iam_role.ecs_agent.name
+}
+
 resource "aws_ecs_cluster" "main" {
   name = "${var.project_name}-cluster"
   tags = {
@@ -51,6 +71,7 @@ resource "aws_launch_configuration" "launch_conf" {
   image_id = data.aws_ami.ec2_ami.id
   instance_type = "t3a.medium"
   name_prefix = var.project_name
+  security_groups = [ aws_security_group.ec2.id ]
   user_data = <<EOF
 #!/bin/bash
 echo ECS_CLUSTER=${aws_ecs_cluster.main.name} >> /etc/ecs/ecs.config
@@ -67,7 +88,6 @@ resource "aws_autoscaling_group" "cluster_asg" {
   min_size = 1
   desired_capacity = 2
   name_prefix = var.project_name
-  protect_from_scale_in = true
   vpc_zone_identifier = var.private_subnets
   
   tag {
@@ -75,19 +95,26 @@ resource "aws_autoscaling_group" "cluster_asg" {
     value               = true
     propagate_at_launch = true
   }
+
+  tag {
+    key                 = "Name"
+    value               = var.project_name
+    propagate_at_launch = true
+  }
+
+  lifecycle {
+    ignore_changes = [desired_capacity]
+  }
 }
 
 resource "aws_ecs_capacity_provider" "ecs_ec2_capacity" {
   name = "${var.project_name}-capacity-provider"
   auto_scaling_group_provider {
     auto_scaling_group_arn = aws_autoscaling_group.cluster_asg.arn
-    managed_termination_protection = "ENABLED"
     
     managed_scaling {
-      maximum_scaling_step_size = 1000
-      minimum_scaling_step_size = 1
       status                    = "ENABLED"
-      target_capacity           = 2
+      target_capacity           = 80
     }
   }
 }
@@ -97,17 +124,67 @@ resource "aws_ecs_cluster_capacity_providers" "providers" {
   capacity_providers = [ "FARGATE", aws_ecs_capacity_provider.ecs_ec2_capacity.name ]
 }
 
-resource "aws_iam_role" "ecs_agent" {
-  name               = "${var.project_name}-ecs-agent"
-  assume_role_policy = data.aws_iam_policy_document.ecs_agent.json
+resource "aws_lb" "main" {
+  name               = "${var.project_name}-alb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.alb.id]
+  subnets            = var.public_subnets
 }
 
-resource "aws_iam_role_policy_attachment" "ecs_agent" {
-  role       = aws_iam_role.ecs_agent.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.main.id
+  port              = var.listener_port
+  protocol          = var.listener_protocol
+
+  default_action {
+    type = "fixed-response"
+
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Fixed response content"
+      status_code  = "200"
+    }
+  }
 }
 
-resource "aws_iam_instance_profile" "ecs_agent" {
-  name = "${var.project_name}-ecs-agent"
-  role = aws_iam_role.ecs_agent.name
+resource "aws_security_group" "alb" {
+  name   = "${var.project_name}-sg-alb"
+  vpc_id = var.vpc_id
+
+  ingress {
+    protocol         = "tcp"
+    from_port        = var.listener_port
+    to_port          = var.listener_port
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  egress {
+    protocol         = "-1"
+    from_port        = 0
+    to_port          = 0
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+}
+
+resource "aws_security_group" "ec2" {
+  name   = "${var.project_name}-sg-ec2"
+  vpc_id = var.vpc_id
+
+  ingress {
+    protocol         = "tcp"
+    from_port        = 32768
+    to_port          = 65535
+    # security_groups = [ aws_security_group.alb.id ]
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+
+  egress {
+    protocol         = "-1"
+    from_port        = 0
+    to_port          = 0
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
 }
