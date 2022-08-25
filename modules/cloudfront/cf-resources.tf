@@ -3,7 +3,6 @@ module "bucket" {
   bucket_name     = "${var.environment}-origin"
   log_bucket_name = "${var.environment}-origin-access-log"
   force_destroy   = true
-  tags            = { project = var.project, environment = var.environment }
 }
 
 resource "aws_s3_bucket_website_configuration" "static_website" {
