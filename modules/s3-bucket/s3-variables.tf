@@ -33,8 +33,3 @@ variable "bucket_key_enabled" {
   type        = bool
   default     = true
 }
-
-variable "enable_cloudfront"{
-  type = bool
-  default = false
-}

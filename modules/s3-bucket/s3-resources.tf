@@ -20,7 +20,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "access_log" {
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "access_log" {
-  count  = var.lifecycle_glacier_transition_days > 0 ? 1 : 0
+  count = var.lifecycle_glacier_transition_days > 0 ? 1 : 0
 
   bucket = aws_s3_bucket.access_log.id
 
@@ -78,13 +78,13 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "content" {
 }
 
 resource "aws_s3_bucket_logging" "content" {
-  bucket = aws_s3_bucket.content.id
+  bucket        = aws_s3_bucket.content.id
   target_bucket = aws_s3_bucket.access_log.id
   target_prefix = ""
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "content" {
-  count  = var.lifecycle_glacier_transition_days > 0 ? 1 : 0
+  count = var.lifecycle_glacier_transition_days > 0 ? 1 : 0
   
   bucket = aws_s3_bucket.content.id
 
