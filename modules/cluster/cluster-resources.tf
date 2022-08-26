@@ -154,6 +154,11 @@ resource "aws_lb_listener" "http" {
   }
 }
 
+resource "aws_lb_listener_certificate" "listener_cert" {
+  listener_arn    = aws_lb_listener.http.arn
+  certificate_arn = data.aws_acm_certificate.certificate.arn
+}
+
 resource "aws_security_group" "alb" {
   name   = "${var.project_name}-sg-alb"
   vpc_id = var.vpc_id
