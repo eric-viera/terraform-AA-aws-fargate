@@ -29,6 +29,8 @@ resource "aws_cloudfront_distribution" "frontend" {
   price_class         = "PriceClass_100"
   default_root_object = "index.html"
   aliases             = ["${var.project}-${var.environment}.${data.aws_route53_zone.selected.name}"]
+  web_acl_id          = aws_wafv2_web_acl.lb_waf.id
+
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD", "OPTIONS"]
     cached_methods         = ["GET", "HEAD"]
@@ -73,4 +75,154 @@ resource "aws_route53_record" "dns" {
     name                   = aws_cloudfront_distribution.frontend.domain_name
     zone_id                = aws_cloudfront_distribution.frontend.hosted_zone_id
   }
+}
+
+resource "aws_wafv2_web_acl" "cf_waf" {
+  name        = "${var.project}-${var.environment}-frontend-waf"
+  description = "Uses AWS managed rulesets."
+  scope       = "CLOUDFRONT"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "AWS_CommonRules"
+    priority = 1
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesCommonRuleSet"
+        vendor_name = "AWS"
+
+        excluded_rule {
+          name = "NoUserAgent_HEADER"
+        }
+
+        scope_down_statement {
+          geo_match_statement {
+            country_codes = ["CN", "US", "TR", "BR", "IN", "MY", "ID", "RU", "DE", "UA", "ES"]
+            /* As of march 2022, according to Cloudflare, the top 10 sources of DDoS attacks are:
+              1.China
+              2.U.S.
+              3.Brazil
+              4.India
+              5.Malaysia
+              6.Indonesia
+              7.Russia
+              8.Germany
+              9.Ukraine
+             10.Spain
+            Source: https://www.govtech.com/security/here-are-the-top-10-countries-where-ddos-attacks-originate */
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${var.project}-${var.environment}-frontend-AWSCommonRules-metric"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  rule {
+    name     = "AWS_BadInputsRules"
+    priority = 2
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesKnownBadInputsRuleSet"
+        vendor_name = "AWS"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${var.project}-${var.environment}-frontend-AWSBadInputsRules-metric"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  rule {
+    name     = "AWS_AdminProtectionRules"
+    priority = 3
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesAdminProtectionRuleSet"
+        vendor_name = "AWS"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${var.project}-${var.environment}-frontend-AWSAdminProtectionRules-metric"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  rule {
+    name     = "AWS_IpReputationRules"
+    priority = 4
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesAmazonIpReputationList"
+        vendor_name = "AWS"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${var.project}-${var.environment}-frontend-AWSIpReputationRules-metric"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  rule {
+    name     = "AWS_AnonymousIpRules"
+    priority = 5
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesAnonymousIpList"
+        vendor_name = "AWS"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${var.project}-${var.environment}-frontend-AWSAnonymousIpRules-metric"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "${var.project}-${var.environment}-frontend-waf-metric"
+    sampled_requests_enabled   = true
+  }
+
+  depends_on = [aws_cloudfront_distribution.frontend]
 }
