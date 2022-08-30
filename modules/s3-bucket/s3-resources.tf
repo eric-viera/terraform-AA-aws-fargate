@@ -41,9 +41,7 @@ resource "aws_s3_bucket_policy" "access_log_policy" {
   bucket = aws_s3_bucket.access_log.id
   policy = data.aws_iam_policy_document.access_log_policy.json
 
-  depends_on = [
-    aws_s3_bucket_public_access_block.access_log,
-  ]
+  depends_on = [aws_s3_bucket_public_access_block.access_log]
 }
 
 resource "aws_s3_bucket_public_access_block" "access_log" {
@@ -58,7 +56,7 @@ resource "aws_s3_bucket" "content" {
   bucket        = var.bucket_name
   force_destroy = var.force_destroy
   tags          = var.tags
-  depends_on    = [ aws_s3_bucket_public_access_block.access_log ]
+  depends_on    = [aws_s3_bucket_public_access_block.access_log]
 }
 
 resource "aws_s3_bucket_acl" "content" {
@@ -85,7 +83,7 @@ resource "aws_s3_bucket_logging" "content" {
 
 resource "aws_s3_bucket_lifecycle_configuration" "content" {
   count = var.lifecycle_glacier_transition_days > 0 ? 1 : 0
-  
+
   bucket = aws_s3_bucket.content.id
 
   rule {

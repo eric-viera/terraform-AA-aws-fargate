@@ -4,8 +4,8 @@ resource "aws_vpc" "main" {
   enable_dns_support   = true
 
   tags = {
-    Name        = "${var.environment}-vpc"
-    cost-tag = var.environment
+    Name     = "${var.environment}-vpc"
+    project = var.environment
   }
 }
 
@@ -13,7 +13,7 @@ resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    cost-tag = var.environment
+    project = var.environment
   }
 }
 
@@ -24,7 +24,7 @@ resource "aws_subnet" "private" {
   availability_zone = data.aws_availability_zones.available.names[count.index]
 
   tags = {
-    cost-tag = var.environment
+    project = var.environment
   }
 }
 
@@ -36,7 +36,7 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = {
-    cost-tag = var.environment
+    project = var.environment
   }
 }
 
@@ -60,9 +60,9 @@ resource "aws_nat_gateway" "main" {
   allocation_id = aws_eip.nat.id
   subnet_id     = element(aws_subnet.public[*].id, 0)
   depends_on    = [aws_internet_gateway.main]
-  
+
   tags = {
-    cost-tag = var.environment
+    project = var.environment
   }
 }
 
@@ -74,7 +74,7 @@ resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    cost-tag = var.environment
+    project = var.environment
   }
 }
 
@@ -85,7 +85,7 @@ resource "aws_route" "private" {
 }
 
 resource "aws_route_table_association" "private" {
-  count = length(var.private_subnets_cidr)
+  count          = length(var.private_subnets_cidr)
   subnet_id      = element(aws_subnet.private[*].id, count.index)
   route_table_id = aws_route_table.private.id
 }
@@ -94,7 +94,7 @@ resource "aws_security_group" "default" {
   name        = "${var.environment}-default-sg"
   description = "Default SG to alllow traffic from the VPC"
   vpc_id      = aws_vpc.main.id
-  
+
   ingress {
     from_port = "0"
     to_port   = "0"
@@ -110,6 +110,6 @@ resource "aws_security_group" "default" {
   }
 
   tags = {
-    Environment = "${var.environment}"
+    project = var.environment
   }
 }

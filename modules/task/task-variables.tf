@@ -11,17 +11,17 @@ variable "project_name" {
 }
 
 variable "service_name" {
-  type = string
+  type        = string
   description = "the name for this particular service"
 }
 
 variable "domain" {
-  type = string
+  type        = string
   description = "the name of the hosted zone"
 }
 
 variable "zone_id" {
-  type = string
+  type        = string
   description = "the id of the hosted zone"
 }
 
@@ -37,13 +37,17 @@ variable "cluster" {
   description = "the cluster id"
 }
 
+variable "cluster_name" {
+  description = "the cluster name"
+}
+
 variable "private_subnets" {
-  type = set(string)
+  type        = set(string)
   description = "A set of private subnet IDs"
 }
 
 variable "public_subnets" {
-  type = set(string)
+  type        = set(string)
   description = "A set of public subnet IDs"
 }
 
@@ -52,23 +56,23 @@ variable "vpc_id" {
 }
 
 variable "container_definitions_json" {
-  type = string
+  type        = string
   description = "a json-encoded string with the container definition"
 }
 
 variable "launch_type" {
-  type = string
+  type        = string
   description = "The valid values are EC2 and FARGATE."
 }
 
 variable "cpu" {
   description = "Number of cpu units used by the task. 1 VCPU = 1024 cpu units"
-  type = number
+  type        = number
 }
 
 variable "memory" {
   description = "Amount (in MiB) of memory used by the task. "
-  type = number
+  type        = number
 }
 
 variable "listener_arn" {
@@ -77,16 +81,26 @@ variable "listener_arn" {
 
 variable "target_group_protocol" {
   description = "Protocol to use for routing traffic to the targets. Should be one of GENEVE, HTTP, HTTPS, TCP, TCP_UDP, TLS, or UDP"
-  type = string
+  type        = string
 }
 
 variable "strategy" {
-  type = string
+  type        = string
   description = "Scheduling strategy to use for the service. Valid values are REPLICA and DAEMON."
-  default = "REPLICA"
+  default     = "REPLICA"
 }
 
 variable "lb_dns_name" {
-  type = string
+  type        = string
   description = "dns name for the load balancer"
+}
+
+variable "health_check_path" {
+  type    = string
+  default = "/"
+}
+
+variable "health_check_code" {
+  type    = string
+  default = "200"
 }

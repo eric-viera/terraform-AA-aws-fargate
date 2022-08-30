@@ -22,8 +22,8 @@ module "ecs-cluster" {
   additional_role_policies           = []
   private_subnets                    = module.vpc.private_subnets_id
   public_subnets                     = module.vpc.public_subnets_id
-  listener_port                      = 80
-  listener_protocol                  = "HTTP" #this is upper-case
+  listener_port                      = 443
+  listener_protocol                  = "HTTPS" #this is upper-case
   vpc_id                             = module.vpc.vpc_id
 }
 
@@ -41,59 +41,17 @@ data "aws_iam_policy_document" "ecs-secret-policy_doc" {
   }
 }
 
-module "mario-service" {
-  source                      = "./modules/task"
-  ecs_task_execution_role_arn = module.ecs-cluster.task_execution_role_arn
-  ecs_task_role_arn           = module.ecs-cluster.task_role_arn
-  project_name                = var.project
-  service_name                = "supermario"
-  domain                      = module.ecs-cluster.domain_name
-  container_image             = "pengbai/docker-supermario:latest"
-  container_port              = 8080
-  cluster                     = module.ecs-cluster.cluster_id
-  private_subnets             = module.vpc.private_subnets_id
-  public_subnets              = module.vpc.public_subnets_id
-  vpc_id                      = module.vpc.vpc_id
-  listener_arn                = module.ecs-cluster.listener_arn
-  lb_dns_name                 = module.ecs-cluster.lb_dns_name
-  target_group_protocol       = "HTTP" #this is upper-case
-  launch_type                 = "EC2"
-  cpu                         = 256
-  memory                      = 512
-  zone_id                     = module.ecs-cluster.zone_id
-  container_definitions_json = jsonencode([{
-    name      = "supermario-container"
-    image     = "pengbai/docker-supermario:latest"
-    essential = true
-    portMappings = [{
-      protocol      = "tcp" #this is lower-case
-      containerPort = 8080
-      hostPort      = 0
-    }]
-    logConfiguration = {
-      logDriver = "awslogs",
-      options = {
-        awslogs-group = var.cloudwatch_group,
-        awslogs-region = var.aws_region,
-        awslogs-stream-prefix = "ecs"
-      }
-    }
-    repositoryCredentials = {
-      credentialsParameter = data.aws_secretsmanager_secret.dockerhub-creds.arn
-    }
-  }])
-}
-
 module "nginx-service" {
   source                      = "./modules/task"
   ecs_task_execution_role_arn = module.ecs-cluster.task_execution_role_arn
   ecs_task_role_arn           = module.ecs-cluster.task_role_arn
-  project_name                = "${var.project}-ec2"
+  project_name                = var.project
   service_name                = "nginx"
   domain                      = module.ecs-cluster.domain_name
   container_image             = "487799950875.dkr.ecr.us-east-1.amazonaws.com/fargate-test-app:latest"
   container_port              = 8080
   cluster                     = module.ecs-cluster.cluster_id
+  cluster_name                = module.ecs-cluster.cluster_name
   private_subnets             = module.vpc.private_subnets_id
   public_subnets              = module.vpc.public_subnets_id
   vpc_id                      = module.vpc.vpc_id
@@ -113,13 +71,57 @@ module "nginx-service" {
       containerPort = 8080
       hostPort      = 0
     }]
-    logConfiguration = {
+    logConfiguration = { #it is strongly advised to include this block
       logDriver = "awslogs",
       options = {
-        awslogs-group = var.cloudwatch_group,
-        awslogs-region = var.aws_region,
+        awslogs-group         = "${var.project}-nginx", #aws logs group name is always "<projectname>-<servicename>"
+        awslogs-region        = var.aws_region,
         awslogs-stream-prefix = "ecs"
       }
+    }
+  }])
+}
+
+module "mario-service" {
+  source                      = "./modules/task"
+  ecs_task_execution_role_arn = module.ecs-cluster.task_execution_role_arn
+  ecs_task_role_arn           = module.ecs-cluster.task_role_arn
+  project_name                = var.project
+  service_name                = "supermario"
+  domain                      = module.ecs-cluster.domain_name
+  container_image             = "pengbai/docker-supermario:latest"
+  container_port              = 8080
+  cluster                     = module.ecs-cluster.cluster_id
+  cluster_name                = module.ecs-cluster.cluster_name
+  private_subnets             = module.vpc.private_subnets_id
+  public_subnets              = module.vpc.public_subnets_id
+  vpc_id                      = module.vpc.vpc_id
+  listener_arn                = module.ecs-cluster.listener_arn
+  lb_dns_name                 = module.ecs-cluster.lb_dns_name
+  target_group_protocol       = "HTTP" #this is upper-case
+  launch_type                 = "EC2"
+  cpu                         = 256
+  memory                      = 512
+  zone_id                     = module.ecs-cluster.zone_id
+  container_definitions_json = jsonencode([{
+    name      = "supermario-container"
+    image     = "pengbai/docker-supermario:latest"
+    essential = true
+    portMappings = [{
+      protocol      = "tcp" #this is lower-case
+      containerPort = 8080
+      hostPort      = 0
+    }]
+    logConfiguration = { #it is strongly advised to include this block
+      logDriver = "awslogs",
+      options = {
+        awslogs-group         = "${var.project}-supermario", #aws logs group name is always "<projectname>-<servicename>"
+        awslogs-region        = var.aws_region,
+        awslogs-stream-prefix = "ecs"
+      }
+    }
+    repositoryCredentials = {
+      credentialsParameter = data.aws_secretsmanager_secret.dockerhub-creds.arn
     }
   }])
 }

@@ -3,42 +3,42 @@ variable "project_name" {
 }
 
 variable "additional_role_policies" {
-  type = list(string)
+  type        = list(string)
   description = "list of json strings containing policy statements"
 }
 
 variable "additional_execution_role_policies" {
-  type = list(string)
+  type        = list(string)
   description = "list of json strings containing policy statements"
 }
 
 variable "private_subnets" {
-  type = list(string)
+  type        = list(string)
   description = "list of private subnet IDs"
 }
 
 variable "public_subnets" {
-  type = list(string)
+  type        = list(string)
   description = "list of public subnet IDs"
 }
 
 variable "domain" {
-  type = string
+  type        = string
   description = "name of the hosted zone"
-  default = "acklenavenueclient.com"
+  default     = "acklenavenueclient.com"
 }
 
 variable "listener_port" {
   description = "Port on which the load balancer is listening"
-  type = number
+  type        = number
 }
 
 variable "listener_protocol" {
   description = "Protocol for connections from clients to the load balancer, valid values are HTTP and HTTPS"
-  type = string
+  type        = string
 }
 
 variable "vpc_id" {
-  type = string
+  type        = string
   description = "id of the vpc"
 }

@@ -25,10 +25,10 @@ resource "aws_s3_bucket_policy" "oai_policy" {
 }
 
 resource "aws_cloudfront_distribution" "frontend" {
-  enabled     = true
-  price_class = "PriceClass_100"
+  enabled             = true
+  price_class         = "PriceClass_100"
   default_root_object = "index.html"
-  aliases = [ "${var.project}-${var.environment}.${data.aws_route53_zone.selected.name}" ]
+  aliases             = ["${var.project}-${var.environment}.${data.aws_route53_zone.selected.name}"]
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD", "OPTIONS"]
     cached_methods         = ["GET", "HEAD"]

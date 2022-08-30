@@ -1,10 +1,10 @@
 resource "aws_iam_role" "ecs_task_role" {
-  name = "${var.project_name}-TaskRole"
+  name               = "${var.project_name}-TaskRole"
   assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
 }
 
 resource "aws_iam_role" "ecs_execution_role" {
-  name = "${var.project_name}-ExecutionRole"
+  name               = "${var.project_name}-ExecutionRole"
   assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
 }
 
@@ -21,8 +21,8 @@ resource "aws_iam_policy" "additional-task-policies" {
 }
 
 resource "aws_iam_role_policy_attachment" "task_policy_attachments" {
-  role = aws_iam_role.ecs_task_role.name
-  count = length(var.additional_role_policies)
+  role       = aws_iam_role.ecs_task_role.name
+  count      = length(var.additional_role_policies)
   policy_arn = element(aws_iam_policy.additional-task-policies[*].arn, count.index)
 }
 
@@ -34,8 +34,8 @@ resource "aws_iam_policy" "additional-execution-policies" {
 }
 
 resource "aws_iam_role_policy_attachment" "execution_policy_attachments" {
-  role = aws_iam_role.ecs_execution_role.name
-  count = length(var.additional_execution_role_policies)
+  role       = aws_iam_role.ecs_execution_role.name
+  count      = length(var.additional_execution_role_policies)
   policy_arn = element(aws_iam_policy.additional-execution-policies[*].arn, count.index)
 }
 
@@ -66,19 +66,19 @@ resource "aws_ecs_cluster" "main" {
     name  = "containerInsights"
     value = "enabled"
   }
-  
+
   tags = {
-    "cost-tag" = var.project_name
+    "project" = var.project_name
   }
 }
 
 resource "aws_launch_configuration" "launch_conf" {
   iam_instance_profile = aws_iam_instance_profile.ecs_agent.name
-  image_id = data.aws_ami.ec2_ami.id
-  instance_type = "t3a.medium"
-  name_prefix = var.project_name
-  security_groups = [ aws_security_group.ec2.id ]
-  user_data = <<EOF
+  image_id             = data.aws_ami.ec2_ami.id
+  instance_type        = "t3a.medium"
+  name_prefix          = var.project_name
+  security_groups      = [aws_security_group.ec2.id]
+  user_data            = <<EOF
 #!/bin/bash
 echo ECS_CLUSTER=${aws_ecs_cluster.main.name} >> /etc/ecs/ecs.config
 EOF
@@ -88,14 +88,14 @@ EOF
 }
 
 resource "aws_autoscaling_group" "cluster_asg" {
-  health_check_type = "EC2"
+  health_check_type    = "EC2"
   launch_configuration = aws_launch_configuration.launch_conf.name
-  max_size = 10
-  min_size = 1
-  desired_capacity = 2
-  name_prefix = var.project_name
-  vpc_zone_identifier = var.private_subnets
-  
+  max_size             = 10
+  min_size             = 1
+  desired_capacity     = 2
+  name_prefix          = var.project_name
+  vpc_zone_identifier  = var.private_subnets
+
   tag {
     key                 = "AmazonECSManaged"
     value               = true
@@ -117,17 +117,17 @@ resource "aws_ecs_capacity_provider" "ecs_ec2_capacity" {
   name = "${var.project_name}-capacity-provider"
   auto_scaling_group_provider {
     auto_scaling_group_arn = aws_autoscaling_group.cluster_asg.arn
-    
+
     managed_scaling {
-      status                    = "ENABLED"
-      target_capacity           = 80
+      status          = "ENABLED"
+      target_capacity = 100
     }
   }
 }
 
 resource "aws_ecs_cluster_capacity_providers" "providers" {
-  cluster_name = aws_ecs_cluster.main.name
-  capacity_providers = [ "FARGATE", aws_ecs_capacity_provider.ecs_ec2_capacity.name ]
+  cluster_name       = aws_ecs_cluster.main.name
+  capacity_providers = ["FARGATE", aws_ecs_capacity_provider.ecs_ec2_capacity.name]
 }
 
 resource "aws_lb" "main" {
@@ -142,6 +142,8 @@ resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.main.id
   port              = var.listener_port
   protocol          = var.listener_protocol
+  certificate_arn   = data.aws_acm_certificate.certificate.arn
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
 
   default_action {
     type = "fixed-response"
@@ -152,11 +154,6 @@ resource "aws_lb_listener" "http" {
       status_code  = "200"
     }
   }
-}
-
-resource "aws_lb_listener_certificate" "listener_cert" {
-  listener_arn    = aws_lb_listener.http.arn
-  certificate_arn = data.aws_acm_certificate.certificate.arn
 }
 
 resource "aws_security_group" "alb" {
@@ -185,17 +182,216 @@ resource "aws_security_group" "ec2" {
   vpc_id = var.vpc_id
 
   ingress {
-    protocol         = "tcp"
-    from_port        = 32768
-    to_port          = 65535
+    protocol  = "tcp"
+    from_port = 32768
+    to_port   = 65535
     # security_groups = [ aws_security_group.alb.id ]
-    cidr_blocks      = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-    protocol         = "-1"
-    from_port        = 0
-    to_port          = 0
-    cidr_blocks      = ["0.0.0.0/0"]
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["0.0.0.0/0"]
   }
+}
+
+resource "aws_wafv2_web_acl" "lb_waf" {
+  name        = "${aws_lb.main.name}-waf"
+  description = "Uses AWS managed rulesets."
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "AWS_CommonRules"
+    priority = 1
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesCommonRuleSet"
+        vendor_name = "AWS"
+
+        excluded_rule {
+          name = "NoUserAgent_HEADER"
+        }
+
+        scope_down_statement {
+          geo_match_statement {
+            country_codes = ["CN", "US", "TR", "BR", "IN", "MY", "ID", "RU", "DE", "UA", "ES"]
+            /* As of march 2022, according to Cloudflare, the top 10 sources of DDoS attacks are:
+              1.China
+              2.U.S.
+              3.Brazil
+              4.India
+              5.Malaysia
+              6.Indonesia
+              7.Russia
+              8.Germany
+              9.Ukraine
+             10.Spain
+            Source: https://www.govtech.com/security/here-are-the-top-10-countries-where-ddos-attacks-originate */
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${aws_lb.main.name}-AWSCommonRules-metric"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  rule {
+    name     = "AWS_LinuxRules"
+    priority = 2
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesLinuxRuleSet"
+        vendor_name = "AWS"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${aws_lb.main.name}-AWSLinuxRules-metric"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  rule {
+    name     = "AWS_BadInputsRules"
+    priority = 3
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesKnownBadInputsRuleSet"
+        vendor_name = "AWS"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${aws_lb.main.name}-AWSBadInputsRules-metric"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  rule {
+    name     = "AWS_AdminProtectionRules"
+    priority = 4
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesAdminProtectionRuleSet"
+        vendor_name = "AWS"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${aws_lb.main.name}-AWSAdminProtectionRules-metric"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  rule {
+    name     = "AWS_UnixRules"
+    priority = 5
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesUnixRuleSet"
+        vendor_name = "AWS"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${aws_lb.main.name}-AWSUnixRules-metric"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  rule {
+    name     = "AWS_IpReputationRules"
+    priority = 6
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesAmazonIpReputationList"
+        vendor_name = "AWS"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${aws_lb.main.name}-AWSIpReputationRules-metric"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  rule {
+    name     = "AWS_AnonymousIpRules"
+    priority = 7
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesAnonymousIpList"
+        vendor_name = "AWS"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${aws_lb.main.name}-AWSAnonymousIpRules-metric"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "${aws_lb.main.name}-waf-metric"
+    sampled_requests_enabled   = true
+  }
+
+  depends_on = [aws_lb.main]
+}
+
+resource "aws_wafv2_web_acl_association" "waf_assoc" {
+  resource_arn = aws_lb.main.arn
+  web_acl_arn  = aws_wafv2_web_acl.lb_waf.arn
 }
