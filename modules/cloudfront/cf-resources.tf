@@ -223,6 +223,4 @@ resource "aws_wafv2_web_acl" "cf_waf" {
     metric_name                = "${var.project}-${var.environment}-frontend-waf-metric"
     sampled_requests_enabled   = true
   }
-
-  depends_on = [aws_cloudfront_distribution.frontend]
 }
