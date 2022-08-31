@@ -67,9 +67,6 @@ resource "aws_ecs_cluster" "main" {
     value = "enabled"
   }
 
-  tags = {
-    "project" = var.project_name
-  }
 }
 
 resource "aws_launch_configuration" "launch_conf" {
@@ -142,8 +139,8 @@ resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.main.id
   port              = var.listener_port
   protocol          = var.listener_protocol
-  certificate_arn   = data.aws_acm_certificate.certificate.arn
-  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = var.listener_protocol == "HTTPS" ? data.aws_acm_certificate.certificate[0].arn : null
+  ssl_policy        = var.listener_protocol == "HTTPS" ? "ELBSecurityPolicy-2016-08" : null
 
   default_action {
     type = "fixed-response"

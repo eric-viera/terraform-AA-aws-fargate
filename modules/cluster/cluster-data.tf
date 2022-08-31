@@ -40,11 +40,9 @@ data "aws_ami" "ec2_ami" {
   }
 }
 
-data "aws_route53_zone" "domain" {
-  name = var.domain
-}
-
 data "aws_acm_certificate" "certificate" {
+count = var.listener_protocol == "HTTPS" ? 1 : 0
+
   domain   = "*.${var.domain}"
   statuses = ["ISSUED"]
 }

@@ -5,16 +5,12 @@ resource "aws_vpc" "main" {
 
   tags = {
     Name     = "${var.environment}-vpc"
-    project = var.environment
   }
 }
 
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
-  tags = {
-    project = var.environment
-  }
 }
 
 resource "aws_subnet" "private" {
@@ -23,9 +19,6 @@ resource "aws_subnet" "private" {
   cidr_block        = element(var.private_subnets_cidr, count.index)
   availability_zone = data.aws_availability_zones.available.names[count.index]
 
-  tags = {
-    project = var.environment
-  }
 }
 
 resource "aws_subnet" "public" {
@@ -35,9 +28,6 @@ resource "aws_subnet" "public" {
   availability_zone       = data.aws_availability_zones.available.names[count.index]
   map_public_ip_on_launch = true
 
-  tags = {
-    project = var.environment
-  }
 }
 
 resource "aws_route_table" "public" {
@@ -61,9 +51,6 @@ resource "aws_nat_gateway" "main" {
   subnet_id     = element(aws_subnet.public[*].id, 0)
   depends_on    = [aws_internet_gateway.main]
 
-  tags = {
-    project = var.environment
-  }
 }
 
 resource "aws_eip" "nat" {
@@ -72,10 +59,6 @@ resource "aws_eip" "nat" {
 
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
-
-  tags = {
-    project = var.environment
-  }
 }
 
 resource "aws_route" "private" {
@@ -107,9 +90,5 @@ resource "aws_security_group" "default" {
     to_port   = "0"
     protocol  = "-1"
     self      = "true"
-  }
-
-  tags = {
-    project = var.environment
   }
 }

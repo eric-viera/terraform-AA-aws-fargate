@@ -20,11 +20,6 @@ variable "domain" {
   description = "the name of the hosted zone"
 }
 
-variable "zone_id" {
-  type        = string
-  description = "the id of the hosted zone"
-}
-
 variable "container_image" {
   description = "The name and tag of the docker image i.e. \"pengbai/docker-supermario:latest\""
 }

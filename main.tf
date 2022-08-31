@@ -24,6 +24,7 @@ module "ecs-cluster" {
   public_subnets                     = module.vpc.public_subnets_id
   listener_port                      = 443
   listener_protocol                  = "HTTPS" #this is upper-case
+  domain                             = var.domain_name
   vpc_id                             = module.vpc.vpc_id
 }
 
@@ -47,7 +48,7 @@ module "nginx-service" {
   ecs_task_role_arn           = module.ecs-cluster.task_role_arn
   project_name                = var.project
   service_name                = "nginx"
-  domain                      = module.ecs-cluster.domain_name
+  domain                      = var.domain_name
   container_image             = "487799950875.dkr.ecr.us-east-1.amazonaws.com/fargate-test-app:latest"
   container_port              = 8080
   cluster                     = module.ecs-cluster.cluster_id
@@ -61,7 +62,6 @@ module "nginx-service" {
   launch_type                 = "EC2"
   cpu                         = 256
   memory                      = 512
-  zone_id                     = module.ecs-cluster.zone_id
   container_definitions_json = jsonencode([{
     name      = "nginx-container"
     image     = "487799950875.dkr.ecr.us-east-1.amazonaws.com/fargate-test-app:latest"
@@ -88,7 +88,7 @@ module "mario-service" {
   ecs_task_role_arn           = module.ecs-cluster.task_role_arn
   project_name                = var.project
   service_name                = "supermario"
-  domain                      = module.ecs-cluster.domain_name
+  domain                      = var.domain_name
   container_image             = "pengbai/docker-supermario:latest"
   container_port              = 8080
   cluster                     = module.ecs-cluster.cluster_id
@@ -102,7 +102,6 @@ module "mario-service" {
   launch_type                 = "EC2"
   cpu                         = 256
   memory                      = 512
-  zone_id                     = module.ecs-cluster.zone_id
   container_definitions_json = jsonencode([{
     name      = "supermario-container"
     image     = "pengbai/docker-supermario:latest"

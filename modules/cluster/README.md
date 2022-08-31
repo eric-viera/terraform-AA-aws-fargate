@@ -1,10 +1,12 @@
 # ECS Cluster
-Module to provision an ECS cluster, an IAM task role, and an IAM task execution role in AWS
+Module to provision an ECS cluster, a load balancer with a listener, an IAM task role, and an IAM task execution role in AWS
 - A cluster is a logical grouping of tasks.
 - An execution task role is the role ECS assumes to provision the container and bring the task online.
 - A task role is the role ECS assumes to perform any action needed by the task while it is running.
 
 This module enables you to assign custom or managed policies to the task role, and the task execution role, in order to grant your tasks any privileges it needs to perform its functions.
+
+This module assumes that if you want an HTTPS listener you already have an *.&lt;domain&gt; acl certificate and can provide the domain for that certificate
 
 ## Input Variables
 | Variable                           | Defaut Value | Type         | Description                                       |

@@ -96,7 +96,7 @@ resource "aws_security_group" "ecs_tasks" {
 }
 
 resource "aws_route53_record" "record" {
-  zone_id = var.zone_id
+  zone_id = data.aws_route53_zone.hosted_zone.id
   name    = "${var.project_name}-${var.service_name}.${var.domain}"
   type    = "CNAME"
   ttl     = 5

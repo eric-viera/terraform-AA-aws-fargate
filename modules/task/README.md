@@ -1,5 +1,6 @@
 # ECS Service
-Module to provision a load balanced ECS service, and a task to be used in an ECS cluster in AWS.
+Module to provision an autoscaled ECS service, and a task to be used in an ECS cluster in AWS.
+This module will also provision a route 53 record and a listener rule to add to a load balancer listener 
 A task is a docker container that will run until its funtion exits or returns an error.
 A service is an artifact that makes sure that there are always at least two containers running, to ensure the continued availability of your task.
 
