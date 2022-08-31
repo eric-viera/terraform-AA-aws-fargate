@@ -133,6 +133,8 @@ resource "aws_lb" "main" {
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
   subnets            = var.public_subnets
+  
+  depends_on = [aws_wafv2_web_acl.lb_waf]
 }
 
 resource "aws_lb_listener" "http" {
@@ -384,8 +386,6 @@ resource "aws_wafv2_web_acl" "lb_waf" {
     metric_name                = "${aws_lb.main.name}-waf-metric"
     sampled_requests_enabled   = true
   }
-
-  depends_on = [aws_lb.main]
 }
 
 resource "aws_wafv2_web_acl_association" "waf_assoc" {
