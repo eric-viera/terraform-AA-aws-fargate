@@ -133,8 +133,6 @@ resource "aws_lb" "main" {
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
   subnets            = var.public_subnets
-  
-  depends_on = [aws_wafv2_web_acl.lb_waf]
 }
 
 resource "aws_lb_listener" "http" {
@@ -391,4 +389,12 @@ resource "aws_wafv2_web_acl" "lb_waf" {
 resource "aws_wafv2_web_acl_association" "waf_assoc" {
   resource_arn = aws_lb.main.arn
   web_acl_arn  = aws_wafv2_web_acl.lb_waf.arn
+
+  depends_on = [time_sleep.wait_for_waf]
+}
+
+resource "time_sleep" "wait_for_waf" {
+  depends_on = [aws_wafv2_web_acl.lb_waf]
+
+  create_duration = "3m"
 }
