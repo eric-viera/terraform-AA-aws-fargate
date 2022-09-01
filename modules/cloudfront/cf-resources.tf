@@ -68,7 +68,7 @@ resource "aws_cloudfront_distribution" "frontend" {
 
 resource "aws_route53_record" "dns" {
   zone_id = data.aws_route53_zone.selected.zone_id
-  name    = "${var.project}-${var.environment}.${data.aws_route53_zone.selected.name}"
+  name    = "${var.project}-frontend-${var.environment}.${data.aws_route53_zone.selected.name}"
   type    = "A"
   alias {
     evaluate_target_health = false
