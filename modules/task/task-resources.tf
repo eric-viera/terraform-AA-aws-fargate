@@ -71,7 +71,7 @@ resource "aws_lb_listener_rule" "static" {
 
   condition {
     host_header {
-      values = ["${var.project_name}-${var.service_name}.${var.domain}"]
+      values = [aws_route53_record.record.name]
     }
   }
 }
