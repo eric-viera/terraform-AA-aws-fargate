@@ -28,7 +28,7 @@ resource "aws_cloudfront_distribution" "frontend" {
   enabled             = true
   price_class         = "PriceClass_100"
   default_root_object = "index.html"
-  aliases             = ["${var.project}-${var.environment}.${data.aws_route53_zone.selected.name}"]
+  aliases             = ["${var.project}-frontend-${var.environment}.${data.aws_route53_zone.selected.name}"]
   web_acl_id          = aws_wafv2_web_acl.cf_waf.arn
 
   default_cache_behavior {

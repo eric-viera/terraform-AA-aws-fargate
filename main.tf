@@ -74,7 +74,7 @@ module "nginx-service" {
     logConfiguration = { #it is strongly advised to include this block
       logDriver = "awslogs",
       options = {
-        awslogs-group         = "${var.project}-nginx", #aws logs group name is always "<projectname>-<servicename>"
+        awslogs-group         = "${var.project}-nginx", #aws logs group name is always "<project_name>-<service_name>"
         awslogs-region        = var.aws_region,
         awslogs-stream-prefix = "ecs"
       }
