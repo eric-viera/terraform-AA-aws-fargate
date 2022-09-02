@@ -74,7 +74,7 @@ resource "aws_launch_configuration" "launch_conf" {
   image_id             = data.aws_ami.ec2_ami.id
   instance_type        = "t3a.medium"
   name_prefix          = var.project_name
-  security_groups      = [aws_security_group.ec2.id]
+  security_groups      = setunion([aws_security_group.ec2.id], var.added_sgs)
   user_data            = <<EOF
 #!/bin/bash
 echo ECS_CLUSTER=${aws_ecs_cluster.main.name} >> /etc/ecs/ecs.config
@@ -182,8 +182,8 @@ resource "aws_security_group" "ec2" {
     protocol  = "tcp"
     from_port = 32768
     to_port   = 65535
-    # security_groups = [ aws_security_group.alb.id ]
-    cidr_blocks = ["0.0.0.0/0"]
+    security_groups = [ aws_security_group.alb.id ]
+    # cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {

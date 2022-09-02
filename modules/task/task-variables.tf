@@ -99,3 +99,9 @@ variable "health_check_code" {
   type    = string
   default = "200"
 }
+
+variable "added_sgs" {
+  type        = list(string)
+  description = "list of security groups to assign tasks to"
+  default     = []
+}

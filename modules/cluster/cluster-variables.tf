@@ -42,3 +42,9 @@ variable "vpc_id" {
   type        = string
   description = "id of the vpc"
 }
+
+variable "added_sgs" {
+  type        = list(string)
+  description = "list of security groups to assign tasks to"
+  default     = []
+}

@@ -23,7 +23,7 @@ resource "aws_ecs_service" "main" {
   dynamic "network_configuration" {
     for_each = var.launch_type == "FARGATE" ? [1] : []
     content {
-      security_groups  = [aws_security_group.ecs_tasks.id]
+      security_groups  = setunion([aws_security_group.ecs_tasks.id], [var.added_sgs])
       subnets          = var.private_subnets
       assign_public_ip = false
     }
