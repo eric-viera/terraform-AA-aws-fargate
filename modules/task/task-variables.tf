@@ -50,11 +50,6 @@ variable "vpc_id" {
   description = "id of the vpc"
 }
 
-variable "container_definitions_json" {
-  type        = string
-  description = "a json-encoded string with the container definition"
-}
-
 variable "launch_type" {
   type        = string
   description = "The valid values are EC2 and FARGATE."
