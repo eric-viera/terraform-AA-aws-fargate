@@ -6,7 +6,25 @@ resource "aws_ecs_task_definition" "main" {
   memory                   = var.memory
   execution_role_arn       = var.ecs_task_execution_role_arn
   task_role_arn            = var.ecs_task_role_arn
-  container_definitions    = var.container_definitions_json
+  container_definitions    = jsonencode([{
+    name      = "${var.service_name}-container"
+    image     = var.container_image
+    essential = true
+    portMappings = [{
+      protocol      = "tcp" #this is lower-case
+      containerPort = var.container_port
+      hostPort      = var.launch_type == "FARGATE" ? var.container_port : 0
+    }]
+    logConfiguration = { #it is strongly advised to include this block
+      logDriver = "awslogs",
+      options = {
+        awslogs-group         = "${var.project_name}-${var.service_name}", #aws logs group name is always "<projectname>-<servicename>"
+        awslogs-region        = data.aws_region.current.name,
+        awslogs-stream-prefix = "ecs"
+      }
+    }
+  }])
+
   depends_on = [aws_cloudwatch_log_group.service_log]
 }
 
@@ -17,7 +35,9 @@ resource "aws_ecs_service" "main" {
   desired_count                      = 2
   deployment_minimum_healthy_percent = 50
   deployment_maximum_percent         = 200
+  force_new_deployment               = true
   launch_type                        = var.launch_type
+  propagate_tags                     = "SERVICE"
   scheduling_strategy                = var.launch_type == "FARGATE" ? "REPLICA" : var.strategy
 
   dynamic "network_configuration" {
@@ -36,7 +56,7 @@ resource "aws_ecs_service" "main" {
   }
 
   lifecycle {
-    ignore_changes = [task_definition, desired_count]
+    ignore_changes = [desired_count]
   }
 
 }
