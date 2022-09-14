@@ -1,10 +1,10 @@
 resource "aws_iam_role" "ecs_task_role" {
-  name               = "${var.project_name}-TaskRole"
+  name               = "${var.project_name}-${var.environment}-TaskRole"
   assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
 }
 
 resource "aws_iam_role" "ecs_execution_role" {
-  name               = "${var.project_name}-ExecutionRole"
+  name               = "${var.project_name}-${var.environment}-ExecutionRole"
   assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
 }
 
@@ -14,7 +14,7 @@ resource "aws_iam_role_policy_attachment" "ecs-task-execution-role-policy-attach
 }
 
 resource "aws_iam_policy" "additional-task-policies" {
-  name        = "${var.project_name}-task-role-policies"
+  name        = "${var.project_name}-${var.environment}-task-role-policies"
   description = "additional policies needed by the task role"
   count       = length(var.additional_role_policies)
   policy      = element(var.additional_role_policies, count.index)
@@ -27,7 +27,7 @@ resource "aws_iam_role_policy_attachment" "task_policy_attachments" {
 }
 
 resource "aws_iam_policy" "additional-execution-policies" {
-  name        = "${var.project_name}-execution-role-policies"
+  name        = "${var.project_name}-${var.environment}-execution-role-policies"
   description = "additional policies needed by the execution role"
   count       = length(var.additional_execution_role_policies)
   policy      = element(var.additional_execution_role_policies, count.index)
@@ -40,7 +40,7 @@ resource "aws_iam_role_policy_attachment" "execution_policy_attachments" {
 }
 
 resource "aws_iam_role" "ecs_agent" {
-  name               = "${var.project_name}-ecs-agent"
+  name               = "${var.project_name}-${var.environment}-ecs-agent"
   assume_role_policy = data.aws_iam_policy_document.ecs_agent_assume_policy.json
 }
 
@@ -55,7 +55,7 @@ resource "aws_iam_role_policy_attachment" "ssm_policy_attach" {
 }
 
 resource "aws_iam_instance_profile" "ecs_agent" {
-  name = "${var.project_name}-ecs-agent"
+  name = "${var.project_name}-${var.environment}-ecs-agent"
   role = aws_iam_role.ecs_agent.name
 }
 
@@ -73,7 +73,7 @@ resource "aws_launch_configuration" "launch_conf" {
   iam_instance_profile = aws_iam_instance_profile.ecs_agent.name
   image_id             = data.aws_ami.ec2_ami.id
   instance_type        = "t3a.medium"
-  name_prefix          = var.project_name
+  name_prefix          = "${var.project_name}-${var.environment}"
   security_groups      = setunion([aws_security_group.ec2.id], var.added_sgs)
   user_data            = <<EOF
 #!/bin/bash
@@ -90,18 +90,12 @@ resource "aws_autoscaling_group" "cluster_asg" {
   max_size             = 10
   min_size             = 1
   desired_capacity     = 2
-  name_prefix          = var.project_name
+  name_prefix          = "${var.project_name}-${var.environment}"
   vpc_zone_identifier  = var.private_subnets
 
   tag {
     key                 = "AmazonECSManaged"
     value               = true
-    propagate_at_launch = true
-  }
-
-  tag {
-    key                 = "Name"
-    value               = var.project_name
     propagate_at_launch = true
   }
 
@@ -117,7 +111,7 @@ resource "aws_autoscaling_group" "cluster_asg" {
 }
 
 resource "aws_ecs_capacity_provider" "ecs_ec2_capacity" {
-  name = "${var.project_name}-capacity-provider"
+  name = "${var.project_name}-${var.environment}-capacity-provider"
   auto_scaling_group_provider {
     auto_scaling_group_arn = aws_autoscaling_group.cluster_asg.arn
 
@@ -134,7 +128,7 @@ resource "aws_ecs_cluster_capacity_providers" "providers" {
 }
 
 resource "aws_lb" "main" {
-  name               = "${var.project_name}-alb"
+  name               = "${var.project_name}-${var.environment}-alb"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
@@ -160,7 +154,7 @@ resource "aws_lb_listener" "http" {
 }
 
 resource "aws_security_group" "alb" {
-  name   = "${var.project_name}-sg-alb"
+  name   = "${var.project_name}-${var.environment}-sg-alb"
   vpc_id = var.vpc_id
 
   ingress {
@@ -181,7 +175,7 @@ resource "aws_security_group" "alb" {
 }
 
 resource "aws_security_group" "ec2" {
-  name   = "${var.project_name}-sg-ec2"
+  name   = "${var.project_name}-${var.environment}-sg-ec2"
   vpc_id = var.vpc_id
 
   ingress {
