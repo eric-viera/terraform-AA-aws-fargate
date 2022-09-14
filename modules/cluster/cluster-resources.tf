@@ -100,6 +100,12 @@ resource "aws_autoscaling_group" "cluster_asg" {
   }
 
   tag {
+    key                 = "Name"
+    value               = "${var.project_name}-${var.environment}"
+    propagate_at_launch = true
+  }
+
+  tag {
     key                 = "Project"
     value               = var.project_name
     propagate_at_launch = true
