@@ -49,6 +49,16 @@ resource "aws_ecs_service" "main" {
     }
   }
 
+  ordered_placement_strategy {
+    type = "binpack"
+    field = "memory"
+  }
+
+  ordered_placement_strategy {
+    type = "binpack"
+    field = "cpu"
+  }
+
   load_balancer {
     target_group_arn = aws_lb_target_group.main.arn
     container_name   = "${var.service_name}-container"
