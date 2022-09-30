@@ -5,16 +5,6 @@ module "bucket" {
   force_destroy   = true
 }
 
-resource "aws_s3_bucket_website_configuration" "static_website" {
-  bucket = module.bucket.this_bucket
-  index_document {
-    suffix = "index.html"
-  }
-  error_document {
-    key = "index.html"
-  }
-}
-
 resource "aws_cloudfront_origin_access_identity" "OAI" {
   comment = module.bucket.this_bucket
 }
@@ -28,7 +18,7 @@ resource "aws_cloudfront_distribution" "frontend" {
   enabled             = true
   price_class         = "PriceClass_100"
   default_root_object = "index.html"
-  aliases             = ["${var.project}-frontend-${var.environment}.${data.aws_route53_zone.selected.name}"]
+  aliases             = ["${var.project}-${var.environment}.${data.aws_route53_zone.selected.name}"]
   web_acl_id          = aws_wafv2_web_acl.cf_waf.arn
 
   default_cache_behavior {
@@ -41,6 +31,14 @@ resource "aws_cloudfront_distribution" "frontend" {
       query_string = false
       cookies {
         forward = "none"
+      }
+    }
+
+    dynamic "lambda_function_association" {
+      for_each = var.lambda_arn != "" ? [1] : []
+      content {
+        event_type = var.event
+        lambda_arn = var.lambda_arn
       }
     }
   }
@@ -68,7 +66,7 @@ resource "aws_cloudfront_distribution" "frontend" {
 
 resource "aws_route53_record" "dns" {
   zone_id = data.aws_route53_zone.selected.zone_id
-  name    = "${var.project}-frontend-${var.environment}.${data.aws_route53_zone.selected.name}"
+  name    = "${var.project}-${var.environment}.${data.aws_route53_zone.selected.name}"
   type    = "A"
   alias {
     evaluate_target_health = false
@@ -78,7 +76,7 @@ resource "aws_route53_record" "dns" {
 }
 
 resource "aws_wafv2_web_acl" "cf_waf" {
-  name        = "${var.project}-${var.environment}-frontend-waf"
+  name        = "${var.project}-${var.environment}-waf"
   description = "Uses AWS managed rulesets."
   scope       = "CLOUDFRONT"
 
@@ -125,7 +123,7 @@ resource "aws_wafv2_web_acl" "cf_waf" {
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = "${var.project}-${var.environment}-frontend-AWSCommonRules-metric"
+      metric_name                = "${var.project}-${var.environment}-AWSCommonRules-metric"
       sampled_requests_enabled   = true
     }
   }
@@ -147,7 +145,7 @@ resource "aws_wafv2_web_acl" "cf_waf" {
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = "${var.project}-${var.environment}-frontend-AWSBadInputsRules-metric"
+      metric_name                = "${var.project}-${var.environment}-AWSBadInputsRules-metric"
       sampled_requests_enabled   = true
     }
   }
@@ -169,7 +167,7 @@ resource "aws_wafv2_web_acl" "cf_waf" {
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = "${var.project}-${var.environment}-frontend-AWSAdminProtectionRules-metric"
+      metric_name                = "${var.project}-${var.environment}-AWSAdminProtectionRules-metric"
       sampled_requests_enabled   = true
     }
   }
@@ -191,7 +189,7 @@ resource "aws_wafv2_web_acl" "cf_waf" {
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = "${var.project}-${var.environment}-frontend-AWSIpReputationRules-metric"
+      metric_name                = "${var.project}-${var.environment}-AWSIpReputationRules-metric"
       sampled_requests_enabled   = true
     }
   }
@@ -213,14 +211,14 @@ resource "aws_wafv2_web_acl" "cf_waf" {
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = "${var.project}-${var.environment}-frontend-AWSAnonymousIpRules-metric"
+      metric_name                = "${var.project}-${var.environment}-AWSAnonymousIpRules-metric"
       sampled_requests_enabled   = true
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = true
-    metric_name                = "${var.project}-${var.environment}-frontend-waf-metric"
+    metric_name                = "${var.project}-${var.environment}-waf-metric"
     sampled_requests_enabled   = true
   }
 }

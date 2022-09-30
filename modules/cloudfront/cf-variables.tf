@@ -12,3 +12,13 @@ variable "project" {
   type        = string
   description = "name of the project"
 }
+
+variable "lambda_arn" {
+  type    = string
+  default = ""
+}
+
+variable "event" {
+  type    = string
+  default = ""
+}

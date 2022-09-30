@@ -302,7 +302,7 @@ resource "aws_wafv2_web_acl" "lb_waf" {
     priority = 4
 
     override_action {
-      none {}
+      count {}
     }
 
     statement {
