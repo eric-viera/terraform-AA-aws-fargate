@@ -22,17 +22,25 @@ data "aws_iam_policy_document" "topic_policy_document" {
   statement {
     actions   = ["SNS:Publish"]
     effect    = "Allow"
-    resources = [
-      "arn:aws:sns:*:*:${aws_s3_bucket.content.id}-notification-topic", 
-      "arn:aws:sns:*:*:${aws_s3_bucket.access_log.id}-notification-topic"
-    ]
+    resources = ["arn:aws:sns:*:*:${aws_s3_bucket.content.id}-notification-topic" ]
     condition {
       test     = "ArnLike"
       variable = "aws:SourceArn"
-      values   = [
-        aws_s3_bucket.content.arn,
-        aws_s3_bucket.access_log.arn
-      ]
+      values   = [aws_s3_bucket.content.arn]
+    }
+    principals {
+      type        = "Service"
+      identifiers = ["s3.amazonaws.com"]
+    }
+  }
+  statement {
+    actions   = ["SNS:Publish"]
+    effect    = "Allow"
+    resources = ["arn:aws:sns:*:*:${aws_s3_bucket.access_log.id}-notification-topic"]
+    condition {
+      test     = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = [aws_s3_bucket.access_log.arn]
     }
     principals {
       type        = "Service"
