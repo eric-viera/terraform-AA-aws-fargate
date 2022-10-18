@@ -38,7 +38,7 @@ data "aws_iam_policy_document" "topic_policy_document" {
     sid = "access-log"
     actions   = ["SNS:Publish"]
     effect    = "Allow"
-    resources = ["arn:aws:sns:*:*:${aws_s3_bucket.access_log.id}-notification-topic"]
+    resources = ["arn:aws:sns:*:*:${aws_s3_bucket.content.id}-notification-topic"]
     condition {
       test     = "ArnLike"
       variable = "aws:SourceArn"
