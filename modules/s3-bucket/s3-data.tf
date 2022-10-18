@@ -20,6 +20,7 @@ data "aws_iam_policy_document" "access_log_policy" {
 
 data "aws_iam_policy_document" "topic_policy_document" {
   statement {
+    sid = "content"
     actions   = ["SNS:Publish"]
     effect    = "Allow"
     resources = ["arn:aws:sns:*:*:${aws_s3_bucket.content.id}-notification-topic" ]
@@ -34,6 +35,7 @@ data "aws_iam_policy_document" "topic_policy_document" {
     }
   }
   statement {
+    sid = "access-log"
     actions   = ["SNS:Publish"]
     effect    = "Allow"
     resources = ["arn:aws:sns:*:*:${aws_s3_bucket.access_log.id}-notification-topic"]
