@@ -22,3 +22,8 @@ variable "event" {
   type    = string
   default = ""
 }
+
+variable "name_prefix" {
+  type = string
+  default = ""
+}

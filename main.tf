@@ -52,3 +52,20 @@ module "nginx-service" {
   alarm_action_arns           = [ module.ecs-cluster.sns_topic_arn ]
   ok_action_arns              = [ module.ecs-cluster.sns_topic_arn ]
 }
+
+module "frontend" {
+  source = "./modules/cloudfront"
+
+  domain = var.domain_name
+  environment = var.environment
+  project = var.project
+}
+
+module "cdn" {
+  source = "./modules/cloudfront"
+  
+  domain = var.domain_name
+  environment = "${var.environment}-deux"
+  project = var.project
+  name_prefix = "umlaut"
+}

@@ -18,7 +18,7 @@ resource "aws_cloudfront_distribution" "frontend" {
   enabled             = true
   price_class         = "PriceClass_100"
   default_root_object = "index.html"
-  aliases             = ["${var.project}-${var.environment}.${data.aws_route53_zone.selected.name}"]
+  aliases             = [var.name_prefix == "" ? "${var.project}-${var.environment}.${data.aws_route53_zone.selected.name}" : "${var.name_prefix}.${data.aws_route53_zone.selected.name}"]
   web_acl_id          = aws_wafv2_web_acl.cf_waf.arn
 
   default_cache_behavior {
@@ -66,7 +66,7 @@ resource "aws_cloudfront_distribution" "frontend" {
 
 resource "aws_route53_record" "dns" {
   zone_id = data.aws_route53_zone.selected.zone_id
-  name    = "${var.project}-${var.environment}.${data.aws_route53_zone.selected.name}"
+  name    = var.name_prefix == "" ? "${var.project}-${var.environment}.${data.aws_route53_zone.selected.name}" : "${var.name_prefix}.${data.aws_route53_zone.selected.name}"
   type    = "A"
   alias {
     evaluate_target_health = false
