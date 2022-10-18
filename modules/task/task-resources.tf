@@ -174,3 +174,18 @@ resource "aws_appautoscaling_policy" "ecs_target_memory" {
     target_value = 80
   }
 }
+
+resource "aws_cloudwatch_metric_alarm" "running-tasks-alarm" {
+  alarm_name                = "${var.project_name}-${var.service_name}-running-tasks-alarm"
+  comparison_operator       = "LessThanThreshold"
+  evaluation_periods        = "1"
+  metric_name               = "RunningTaskCount"
+  namespace                 = "ECS/ContainerInsights"
+  dimensions                = {ClusterName = "${var.cluster_name}", ServiceName = "${var.service_name}"}
+  period                    = "60"
+  statistic                 = "Average"
+  threshold                 = "1"
+  alarm_description         = "This metric monitors the Service running tasks"
+  alarm_actions             = var.alarm_action_arns
+  ok_actions                = var.ok_action_arns
+}

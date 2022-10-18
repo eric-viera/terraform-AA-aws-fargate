@@ -100,3 +100,15 @@ variable "added_sgs" {
   description = "list of security groups to assign tasks to"
   default     = []
 }
+
+variable "alarm_action_arns" {
+  type        = list(string)
+  default     = []
+  description = "List of actions to execute when the alarm transitions into ALARM state from any other state. Each action is specified as an ARN"
+}
+
+variable "ok_action_arns" {
+  type        = list(string)
+  default     = []
+  description = "List of actions to execute when the alarm transitions into OK state from any other state. Each action is specified as an ARN"
+}

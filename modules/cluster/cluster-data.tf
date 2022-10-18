@@ -46,3 +46,19 @@ count = var.listener_protocol == "HTTPS" ? 1 : 0
   domain   = "*.${var.domain}"
   statuses = ["ISSUED"]
 }
+
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_policy_document" "topic-policy" {
+  statement {
+    actions = [ "SNS:Publish" ]
+    effect = "Allow"
+    resources = ["arn:aws:sns:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${aws_ecs_cluster.main.name}-service-down-topic"]
+    principals {
+      type = "Service"
+      identifiers = [ "cloudwatch.amazonaws.com" ]
+    }
+  }
+}

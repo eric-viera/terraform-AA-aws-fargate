@@ -96,3 +96,34 @@ resource "aws_security_group_rule" "self-egress" {
   protocol  = "-1"
   self      = true
 }
+
+resource "aws_flow_log" "vpc_flow_log" {
+  iam_role_arn    = aws_iam_role.flow_log_role.arn
+  log_destination = aws_cloudwatch_log_group.flow_log_group.arn
+  traffic_type    = "ALL"
+  vpc_id          = aws_vpc.main.id
+}
+
+resource "aws_cloudwatch_log_group" "flow_log_group" {
+  name = "${var.environment}-vpc-flow-log-group"
+}
+
+resource "aws_iam_role" "flow_log_role" {
+  name = "${var.environment}-vpc-flow-log-role"
+  assume_role_policy = data.aws_iam_policy_document.flow_log_assume_policy.json
+}
+
+resource "aws_iam_role_policy" "vpc_flow_log_policy" {
+  name = "${var.environment}-vpc-flow-log-policy"
+  role = aws_iam_role.flow_log_role.id
+  policy = data.aws_iam_policy_document.flow_log_policy.json
+}
+
+resource "aws_vpc_endpoint" "ec2_endpoint" {
+  vpc_id = aws_vpc.main.id
+  service_name      = "com.amazonaws.${data.aws_region.current.name}.ec2"
+  vpc_endpoint_type = "Interface"
+  subnet_ids = aws_subnet.private[*].id
+  private_dns_enabled = true
+  security_group_ids = [ aws_security_group.default.id ]
+}

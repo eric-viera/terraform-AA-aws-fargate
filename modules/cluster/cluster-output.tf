@@ -21,3 +21,7 @@ output "listener_arn" {
 output "lb_dns_name" {
   value = aws_lb.main.dns_name
 }
+
+output "sns_topic_arn" {
+  value = aws_sns_topic.alarm_topic.arn
+}

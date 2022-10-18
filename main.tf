@@ -18,6 +18,7 @@ module "vpc" {
 module "ecs-cluster" {
   source                             = "./modules/cluster"
   project_name                       = var.project
+  environment                        = var.environment
   additional_execution_role_policies = []
   additional_role_policies           = []
   private_subnets                    = module.vpc.private_subnets_id
@@ -48,4 +49,6 @@ module "nginx-service" {
   launch_type                 = "EC2"
   cpu                         = 256
   memory                      = 512
+  alarm_action_arns           = [ module.ecs-cluster.sns_topic_arn ]
+  ok_action_arns              = [ module.ecs-cluster.sns_topic_arn ]
 }

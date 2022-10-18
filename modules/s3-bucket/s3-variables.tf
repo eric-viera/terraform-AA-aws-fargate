@@ -33,3 +33,9 @@ variable "bucket_key_enabled" {
   type        = bool
   default     = true
 }
+
+variable "sns_endpoint" {
+  default = "devops@acklenavenue.com"
+  description = "Email address to send bucket notifications to."
+  type = string
+}

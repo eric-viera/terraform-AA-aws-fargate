@@ -119,3 +119,37 @@ resource "aws_s3_bucket_public_access_block" "content" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
+
+resource "aws_sns_topic" "topic" {
+  name              = "${aws_s3_bucket.content.id}-notification-topic"
+  kms_master_key_id = "alias/nsp-kms"
+}
+
+resource "aws_s3_bucket_notification" "content_bucket_notification" {
+  bucket = aws_s3_bucket.content.id
+
+  topic {
+    topic_arn = aws_sns_topic.topic.arn
+    events    = ["s3:ObjectRemoved:*"]
+  }
+}
+
+resource "aws_sns_topic_policy" "topic_policy" {
+  arn    = aws_sns_topic.topic.arn
+  policy = data.aws_iam_policy_document.topic_policy_document.json
+}
+
+resource "aws_s3_bucket_notification" "access_log_bucket_notification" {
+  bucket = aws_s3_bucket.access_log.id
+
+  topic {
+    topic_arn = aws_sns_topic.topic.arn
+    events    = ["s3:ObjectRemoved:*"]
+  }
+}
+
+resource "aws_sns_topic_subscription" "notification_subscription" {
+  protocol  = "email"
+  endpoint  = var.sns_endpoint
+  topic_arn = aws_sns_topic.topic.arn
+}

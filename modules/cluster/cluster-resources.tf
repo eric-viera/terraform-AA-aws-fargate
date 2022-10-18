@@ -75,6 +75,12 @@ resource "aws_launch_configuration" "launch_conf" {
   instance_type        = "t3a.medium"
   name_prefix          = "${var.project_name}-${var.environment}"
   security_groups      = setunion([aws_security_group.ec2.id], var.added_sgs)
+  
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens = "required"
+  }
+  
   user_data            = <<EOF
 #!/bin/bash
 echo ECS_CLUSTER=${aws_ecs_cluster.main.name} >> /etc/ecs/ecs.config
@@ -403,4 +409,15 @@ resource "time_sleep" "wait_for_waf" {
   depends_on = [aws_wafv2_web_acl.lb_waf]
 
   create_duration = "3m"
+}
+
+resource "aws_sns_topic" "alarm_topic" {
+  name = "${aws_ecs_cluster.main.name}-service-down-topic"
+  policy = data.aws_iam_policy_document.topic-policy.json
+}
+
+resource "aws_sns_topic_subscription" "notification_subscription" {
+  protocol = "email"
+  endpoint = var.notification_email
+  topic_arn = aws_sns_topic.alarm_topic.arn
 }

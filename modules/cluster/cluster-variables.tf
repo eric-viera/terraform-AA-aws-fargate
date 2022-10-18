@@ -52,3 +52,8 @@ variable "added_sgs" {
   description = "list of security groups to assign tasks to"
   default     = []
 }
+
+variable "notification_email" {
+  type = string
+  default = "devops@acklenavenue.com"
+}

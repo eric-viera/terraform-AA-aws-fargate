@@ -9,6 +9,11 @@ variable "aws_region" {
 }
 
 variable "domain_name" {
-  type = string
+  type    = string
   default = "acklenavenueclient.com"
+}
+
+variable "environment" {
+  type    = string
+  default = "local"
 }
