@@ -53,7 +53,7 @@ resource "aws_s3_bucket_public_access_block" "access_log" {
 }
 
 resource "aws_s3_bucket" "content" {
-  bucket        = var.bucket_name
+  bucket_prefix = var.bucket_name
   force_destroy = var.force_destroy
   tags          = var.tags
   depends_on    = [aws_s3_bucket_public_access_block.access_log]
