@@ -95,6 +95,12 @@ variable "health_check_code" {
   default = "200"
 }
 
+variable "health_check_port" {
+  type    = string
+  default = "traffic-port"
+}
+
+
 variable "added_sgs" {
   type        = list(string)
   description = "list of security groups to assign tasks to"

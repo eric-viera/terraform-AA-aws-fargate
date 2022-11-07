@@ -84,7 +84,7 @@ resource "aws_lb_target_group" "main" {
     interval            = 30
     matcher             = var.health_check_code
     path                = var.health_check_path
-    port                = "traffic-port"
+    port                = var.health_check_port
     protocol            = var.target_group_protocol
     timeout             = 5
     unhealthy_threshold = 2
