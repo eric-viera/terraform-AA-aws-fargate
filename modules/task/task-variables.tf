@@ -118,3 +118,8 @@ variable "ok_action_arns" {
   default     = []
   description = "List of actions to execute when the alarm transitions into OK state from any other state. Each action is specified as an ARN"
 }
+
+variable "unhealthy_threshold" {
+  type = number
+  default = 2
+}
