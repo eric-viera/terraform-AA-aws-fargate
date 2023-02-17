@@ -73,14 +73,13 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private.id
 }
 
-resource "aws_security_group" "default" {
-  name        = "${var.environment}-default-sg"
+resource "aws_default_security_group" "default" {
   description = "Default SG to allow traffic only from inside itself"
   vpc_id      = aws_vpc.main.id
 }
 
 resource "aws_security_group_rule" "self-ingress" {
-  security_group_id = aws_security_group.default.id
+  security_group_id = aws_default_security_group.default.id
   type = "ingress"
   from_port = 0
   to_port   = 0
@@ -89,7 +88,7 @@ resource "aws_security_group_rule" "self-ingress" {
 }
 
 resource "aws_security_group_rule" "self-egress" {
-  security_group_id = aws_security_group.default.id
+  security_group_id = aws_default_security_group.default.id
   type = "egress"
   from_port = 0
   to_port   = 0

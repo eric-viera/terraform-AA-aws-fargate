@@ -41,7 +41,7 @@ data "aws_ami" "ec2_ami" {
 }
 
 data "aws_acm_certificate" "certificate" {
-count = var.listener_protocol == "HTTPS" ? 1 : 0
+  count = var.listener_protocol == "HTTPS" ? 1 : 0
 
   domain   = "*.${var.domain}"
   statuses = ["ISSUED"]

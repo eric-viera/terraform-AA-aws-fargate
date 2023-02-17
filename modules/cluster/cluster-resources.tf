@@ -93,7 +93,7 @@ EOF
 resource "aws_autoscaling_group" "cluster_asg" {
   health_check_type    = "EC2"
   launch_configuration = aws_launch_configuration.launch_conf.name
-  max_size             = 10
+  max_size             = var.max_size
   min_size             = 1
   desired_capacity     = 2
   name_prefix          = "${var.project_name}-${var.environment}"
@@ -228,7 +228,10 @@ resource "aws_wafv2_web_acl" "lb_waf" {
         name        = "AWSManagedRulesCommonRuleSet"
         vendor_name = "AWS"
 
-        excluded_rule {
+        rule_action_override {
+          action_to_use {
+            count {}
+          }
           name = "NoUserAgent_HEADER"
         }
 
