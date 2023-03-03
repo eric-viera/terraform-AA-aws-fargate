@@ -100,6 +100,10 @@ variable "health_check_port" {
   default = "traffic-port"
 }
 
+variable "min_tasks" {
+  type = number
+  default = 2
+}
 
 variable "added_sgs" {
   type        = list(string)

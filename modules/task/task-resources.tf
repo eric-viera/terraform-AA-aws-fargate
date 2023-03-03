@@ -32,7 +32,7 @@ resource "aws_ecs_service" "main" {
   name                               = "${var.service_name}-service"
   cluster                            = var.cluster
   task_definition                    = aws_ecs_task_definition.main.arn
-  desired_count                      = 2
+  desired_count                      = 1
   deployment_minimum_healthy_percent = 50
   deployment_maximum_percent         = 200
   force_new_deployment               = true
@@ -139,7 +139,7 @@ resource "aws_cloudwatch_log_group" "service_log" {
 
 resource "aws_appautoscaling_target" "ecs_target" {
   max_capacity       = 6
-  min_capacity       = 2
+  min_capacity       = var.min_tasks
   resource_id        = "service/${var.cluster_name}/${aws_ecs_service.main.name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
