@@ -123,7 +123,7 @@ resource "aws_vpc_endpoint" "ec2_endpoint" {
   vpc_id = aws_vpc.main.id
   service_name      = "com.amazonaws.${data.aws_region.current.name}.ec2"
   vpc_endpoint_type = "Interface"
-  subnet_ids = aws_subnet.private[*].id
+  subnet_ids = aws_subnet.private.*.id
   private_dns_enabled = true
   security_group_ids = [ aws_security_group.default.id ]
 }
