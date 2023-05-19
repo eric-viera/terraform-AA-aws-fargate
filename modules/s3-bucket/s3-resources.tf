@@ -4,7 +4,15 @@ resource "aws_s3_bucket" "access_log" {
   tags          = var.tags
 }
 
+resource "aws_s3_bucket_ownership_controls" "access-log" {
+  bucket = aws_s3_bucket.access_log.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "access_log" {
+  depends_on = [aws_s3_bucket_ownership_controls.access-log]
   bucket = aws_s3_bucket.access_log.id
   acl    = "log-delivery-write"
 }
@@ -59,7 +67,15 @@ resource "aws_s3_bucket" "content" {
   depends_on    = [aws_s3_bucket_public_access_block.access_log]
 }
 
+resource "aws_s3_bucket_ownership_controls" "content" {
+  bucket = aws_s3_bucket.content.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "content" {
+  depends_on = [aws_s3_bucket_ownership_controls.content]
   bucket = aws_s3_bucket.content.id
   acl    = "private"
 }
