@@ -7,6 +7,11 @@ provider "aws" {
   }
 }
 
+module "cognito" {
+  source = "./modules/cognito"
+  name = var.environment
+}
+/* 
 module "vpc" {
   source               = "./modules/vpc"
   vpc_cidr             = "10.0.0.0/16"
@@ -69,3 +74,4 @@ module "cdn" {
   project = var.project
   name_prefix = "umlaut"
 }
+ */
