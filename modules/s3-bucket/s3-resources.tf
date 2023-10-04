@@ -148,6 +148,7 @@ resource "aws_s3_bucket_notification" "content_bucket_notification" {
     topic_arn = aws_sns_topic.topic.arn
     events    = ["s3:ObjectRemoved:*"]
   }
+  depends_on = [ aws_sns_topic_policy.topic_policy ]
 }
 
 resource "aws_sns_topic_policy" "topic_policy" {
@@ -162,6 +163,7 @@ resource "aws_s3_bucket_notification" "access_log_bucket_notification" {
     topic_arn = aws_sns_topic.topic.arn
     events    = ["s3:ObjectRemoved:*"]
   }
+  depends_on = [ aws_sns_topic_policy.topic_policy ]
 }
 
 resource "aws_sns_topic_subscription" "notification_subscription" {
