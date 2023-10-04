@@ -98,7 +98,10 @@ resource "aws_wafv2_web_acl" "cf_waf" {
         name        = "AWSManagedRulesCommonRuleSet"
         vendor_name = "AWS"
 
-        excluded_rule {
+        rule_action_override {
+          action_to_use {
+            count {}
+          }
           name = "NoUserAgent_HEADER"
         }
 
@@ -207,6 +210,13 @@ resource "aws_wafv2_web_acl" "cf_waf" {
       managed_rule_group_statement {
         name        = "AWSManagedRulesAnonymousIpList"
         vendor_name = "AWS"
+        
+        rule_action_override {
+          action_to_use {
+            count {}
+          }
+          name = "HostingProviderIPList"
+        }
       }
     }
 
