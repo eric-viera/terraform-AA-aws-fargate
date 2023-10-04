@@ -53,7 +53,8 @@ resource "aws_cloudfront_distribution" "frontend" {
 
   restrictions {
     geo_restriction {
-      restriction_type = "none"
+      restriction_type = var.geo_restriction_type
+      locations = var.restriction_locations
     }
   }
 

@@ -27,3 +27,17 @@ variable "name_prefix" {
   type = string
   default = ""
 }
+
+variable "geo_restriction_type" {
+  type = string
+  default = "none"
+  validation {
+    condition = var.geo_restriction_type == "none" || var.geo_restriction_type == "whitelist" || var.geo_restriction_type == "blacklist"
+    error_message = "Valid values are \"none\", \"whitelist\", \"blacklist\""
+  }
+}
+
+variable "restriction_locations" {
+  type = list(string)
+  default = [ ]
+}
