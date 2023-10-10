@@ -138,7 +138,7 @@ resource "aws_s3_bucket_public_access_block" "content" {
 
 resource "aws_sns_topic" "topic" {
   name              = "${aws_s3_bucket.content.id}-notification-topic"
-  # kms_master_key_id = "alias/aws/sns"
+  kms_master_key_id = "alias/aws/sns"
 }
 
 resource "aws_s3_bucket_notification" "content_bucket_notification" {
