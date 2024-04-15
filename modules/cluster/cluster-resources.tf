@@ -228,10 +228,11 @@ resource "aws_wafv2_web_acl" "lb_waf" {
         name        = "AWSManagedRulesCommonRuleSet"
         vendor_name = "AWS"
 
-        rule_action_override = {
-          NoUserAgent_HEADER = {
-            action = "allow"
+        rule_action_override {
+          action_to_use {
+            count {}
           }
+          name = "NoUserAgent_HEADER"
         }
 
         scope_down_statement {
