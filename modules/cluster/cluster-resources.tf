@@ -75,13 +75,13 @@ resource "aws_launch_configuration" "launch_conf" {
   instance_type        = "t3a.medium"
   name_prefix          = "${var.project_name}-${var.environment}"
   security_groups      = setunion([aws_security_group.ec2.id], var.added_sgs)
-  
+
   metadata_options {
     http_endpoint = "enabled"
-    http_tokens = "required"
+    http_tokens   = "required"
   }
-  
-  user_data            = <<EOF
+
+  user_data = <<EOF
 #!/bin/bash
 echo ECS_CLUSTER=${aws_ecs_cluster.main.name} >> /etc/ecs/ecs.config
 EOF
@@ -191,10 +191,10 @@ resource "aws_security_group" "ec2" {
   vpc_id = var.vpc_id
 
   ingress {
-    protocol  = "tcp"
-    from_port = 32768
-    to_port   = 65535
-    security_groups = [ aws_security_group.alb.id ]
+    protocol        = "tcp"
+    from_port       = 32768
+    to_port         = 65535
+    security_groups = [aws_security_group.alb.id]
     # cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -228,8 +228,10 @@ resource "aws_wafv2_web_acl" "lb_waf" {
         name        = "AWSManagedRulesCommonRuleSet"
         vendor_name = "AWS"
 
-        excluded_rule {
-          name = "NoUserAgent_HEADER"
+        rule_action_override = {
+          NoUserAgent_HEADER = {
+            action = "allow"
+          }
         }
 
         scope_down_statement {
@@ -412,12 +414,12 @@ resource "time_sleep" "wait_for_waf" {
 }
 
 resource "aws_sns_topic" "alarm_topic" {
-  name = "${aws_ecs_cluster.main.name}-service-down-topic"
+  name   = "${aws_ecs_cluster.main.name}-service-down-topic"
   policy = data.aws_iam_policy_document.topic-policy.json
 }
 
 resource "aws_sns_topic_subscription" "notification_subscription" {
-  protocol = "email"
-  endpoint = var.notification_email
+  protocol  = "email"
+  endpoint  = var.notification_email
   topic_arn = aws_sns_topic.alarm_topic.arn
 }
