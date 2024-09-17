@@ -1,7 +1,7 @@
 module "bucket" {
   source          = "eric-viera/AA-fargate/aws//modules/s3-bucket"
   bucket_name     = "${var.environment}-origin"
-  log_bucket_name = "${var.environment}-origin-access-log"
+  log_bucket_name = "${var.environment}-origin-access-logs"
   force_destroy   = true
 }
 
